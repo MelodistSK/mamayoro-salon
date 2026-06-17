@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>無料相談・案内のお申し込み｜ままよろサロン</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#eab464;--gold-strong:#f3c479;--teal-bright:#bdeffa;--ink:#f5ede0;--ink-2:#cabfae;--ink-3:#8a7f6d;
+    --field:#fbf7ef;--field-ink:#1a1408;--line:rgba(245,237,224,.14);--bad:#e88;
+    --serif:"Shippori Mincho B1",serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased;
+    background:#0b1733;background-image:radial-gradient(120% 80% at 80% -10%,rgba(234,180,100,.10),transparent 55%),radial-gradient(90% 70% at 0% 0%,rgba(121,199,191,.05),transparent 50%);
+    background-attachment:fixed;min-height:100vh;padding:28px 16px 60px}
+  .wrap{max-width:540px;margin:0 auto}
+  .kick{font-size:12px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:10px}
+  h1{font-family:var(--serif);font-weight:700;font-size:clamp(24px,6vw,32px);letter-spacing:.03em;line-height:1.3}
+  .lead{color:var(--ink-2);font-size:14.5px;margin-top:12px}
+  .lead .g{color:var(--gold-strong);font-weight:700}
+  form{margin-top:24px;display:flex;flex-direction:column;gap:18px}
+  .f label.fl{display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:7px}
+  .req{color:var(--gold);font-size:11px;font-weight:700;margin-left:6px}
+  .opt{color:var(--ink-3);font-size:11px;font-weight:500;margin-left:6px}
+  input[type=text],input[type=email],input[type=tel],select,textarea{
+    width:100%;font-family:var(--sans);font-size:16px;color:var(--field-ink);background:var(--field);
+    border:1.5px solid transparent;border-radius:11px;padding:13px 14px;outline:none;transition:border-color .2s,box-shadow .2s}
+  textarea{min-height:92px;resize:vertical;line-height:1.6}
+  input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(234,180,100,.22)}
+  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%231a1408' stroke-width='2'%3E%3Cpath d='M3 5l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
+  /* 希望の切替（二段構え） */
+  .seg{display:flex;flex-direction:column;gap:9px}
+  .seg-o{position:relative;display:block;border:1.5px solid var(--line);border-radius:12px;padding:14px 15px;cursor:pointer;transition:.18s}
+  .seg-o:hover{border-color:rgba(234,180,100,.5)}
+  .seg-o input{position:absolute;opacity:0}
+  .seg-o .st{font-weight:700;font-size:15px;color:var(--ink)}
+  .seg-o .ss{display:block;font-size:12px;color:var(--ink-3);margin-top:2px}
+  .seg-o:has(input:checked){border-color:var(--gold);background:rgba(234,180,100,.10)}
+  .seg-o:has(input:checked) .st{color:var(--gold-strong)}
+  .choices{display:flex;flex-direction:column;gap:9px}
+  .choice{position:relative;display:flex;align-items:center;gap:11px;background:rgba(245,237,224,.05);border:1.5px solid var(--line);border-radius:11px;padding:13px 14px;cursor:pointer;transition:.18s}
+  .choice:hover{border-color:rgba(234,180,100,.5)}
+  .choice input{position:absolute;opacity:0}
+  .dot{flex:0 0 auto;width:18px;height:18px;border-radius:50%;border:2px solid var(--ink-3);transition:.18s}
+  .choice .ct{font-size:14.5px;color:var(--ink)}
+  .choice .cs{display:block;font-size:12px;color:var(--ink-3);margin-top:1px}
+  .choice input:checked~.dot{border-color:var(--gold);background:radial-gradient(circle at center,var(--gold) 0 5px,transparent 6px)}
+  .choice:has(input:checked){border-color:var(--gold);background:rgba(234,180,100,.10)}
+  .consent{display:flex;align-items:flex-start;gap:11px;font-size:13.5px;color:var(--ink-2)}
+  .consent input{flex:0 0 auto;width:20px;height:20px;margin-top:2px;accent-color:var(--gold)}
+  .consent a{color:var(--gold-strong)}
+  .btn{font-family:var(--sans);font-weight:700;font-size:17px;color:#1a1408;background:linear-gradient(180deg,var(--gold-strong),var(--gold));
+    border:none;border-radius:100px;padding:16px;cursor:pointer;box-shadow:0 10px 28px rgba(234,180,100,.28);transition:transform .2s,opacity .2s;margin-top:4px}
+  .btn:hover{transform:translateY(-2px)} .btn:disabled{opacity:.55;transform:none;cursor:default}
+  .note{font-size:11.5px;color:var(--ink-3);text-align:center;margin-top:2px}
+  .err{color:var(--bad);font-size:13px;min-height:1px}
+  .thanks{display:none;text-align:center;padding:54px 16px}
+  .thanks .ic{width:64px;height:64px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;margin:0 auto 22px}
+  .thanks .ic svg{width:30px;height:30px;stroke:var(--gold)}
+  .thanks h2{font-family:var(--serif);font-weight:700;font-size:24px;color:var(--ink)}
+  .thanks p{color:var(--ink-2);font-size:14.5px;margin-top:12px}
+  .foot{margin-top:30px;text-align:center;font-size:11px;letter-spacing:.1em;color:var(--ink-3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="card">
+    <div class="kick">ままよろサロン</div>
+    <h1>お申し込み</h1>
+    <p class="lead">あなたの会社の<span class="g">“効く一カ所”</span>を、一緒に見つけます。今すぐの相談でも、まずは情報だけでも。</p>
+
+    <form id="form" novalidate>
+      <!-- 将来プラットフォーム用メタ（開催回） -->
+      <input type="hidden" name="event_id" value="MMYS-2026-08">
+      <input type="hidden" name="event_ym" value="2026-08">
+      <input type="hidden" name="series"   value="ままよろサロン">
+      <input type="hidden" name="kind"     id="kind" value="無料相談">
+      <input type="hidden" name="source"   value="登壇QR">
+
+      <!-- ① 希望の切替（ホット / ソフト） -->
+      <div class="f"><label class="fl">ご希望<span class="req">必須</span></label>
+        <div class="seg">
+          <label class="seg-o"><input type="radio" name="mode" value="hot" checked><span class="st">無料相談を申し込む</span><span class="ss">“効く一カ所”を一緒に見つける（無料・オンライン可）</span></label>
+          <label class="seg-o"><input type="radio" name="mode" value="soft"><span class="st">案内・資料だけ受け取る</span><span class="ss">いまは情報だけ、という方へ（メールのみでOK）</span></label>
+        </div>
+      </div>
+
+      <!-- 共通 -->
+      <div class="f"><label class="fl">お名前<span class="req">必須</span></label>
+        <input type="text" name="name" autocomplete="name" required></div>
+
+      <div class="f"><label class="fl">会社名・屋号<span class="req" id="companyReq">必須</span><span class="opt" id="companyOpt" style="display:none">任意</span></label>
+        <input type="text" name="company" id="company" autocomplete="organization" required></div>
+
+      <div class="f"><label class="fl">メールアドレス<span class="req">必須</span></label>
+        <input type="email" name="email" autocomplete="email" inputmode="email" required></div>
+
+      <!-- ② 無料相談のときだけ表示 -->
+      <div id="hotBlock" style="display:flex;flex-direction:column;gap:18px">
+        <div class="f"><label class="fl">電話番号<span class="opt">任意</span></label>
+          <input type="tel" name="phone" autocomplete="tel" inputmode="tel"></div>
+
+        <div class="f"><label class="fl">興味の方向<span class="req">必須</span></label>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="direction" value="構築を任せたい"><span class="dot"></span><span><span class="ct">仕組み化を任せたい</span><span class="cs">プロに構築をお願いしたい（線）</span></span></label>
+            <label class="choice"><input type="radio" name="direction" value="自分たちで学びたい"><span class="dot"></span><span><span class="ct">自分たちで学びたい</span><span class="cs">社内でできるようになりたい</span></span></label>
+            <label class="choice"><input type="radio" name="direction" value="現状を聞いてほしい"><span class="dot"></span><span><span class="ct">現状を聞いてほしい</span><span class="cs">どこから手をつけるか、一緒に考えたい</span></span></label>
+          </div>
+        </div>
+
+        <div class="f"><label class="fl">いま一番の困りごと／自動化したい業務<span class="opt">任意</span></label>
+          <textarea name="concern" placeholder="例：毎月の請求書作成に時間がかかっている／問い合わせ対応を効率化したい など"></textarea></div>
+
+        <div class="f"><label class="fl">業種<span class="opt">任意</span></label>
+          <select name="industry">
+            <option value="">選択してください</option>
+            <option>製造</option><option>建設</option><option>不動産</option><option>小売・EC</option><option>飲食</option>
+            <option>医療・介護</option><option>士業</option><option>IT・Web</option><option>サービス</option><option>その他</option>
+          </select></div>
+
+        <div class="f"><label class="fl">会社規模<span class="opt">任意</span></label>
+          <select name="size">
+            <option value="">選択してください</option>
+            <option>1人</option><option>2〜5人</option><option>6〜20人</option><option>21〜50人</option><option>51人以上</option>
+          </select></div>
+      </div>
+
+      <label class="consent"><input type="checkbox" name="consent" value="同意" required>
+        <span><a href="#" target="_blank" rel="noopener">個人情報の取り扱い</a>に同意します<span class="req">必須</span></span></label>
+
+      <div class="err" id="err"></div>
+      <button class="btn" id="btn" type="submit">無料相談を申し込む</button>
+      <div class="note">いただいた内容はご連絡・ご案内のみに使用します。</div>
+    </form>
+  </div>
+
+  <div class="thanks" id="thanks">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></div>
+    <h2 id="thanksTitle">お申し込み、ありがとうございます。</h2>
+    <p id="thanksMsg">2営業日以内に、ご記入のメールアドレス宛にご連絡します。</p>
+  </div>
+
+  <div class="foot">© ままよろサロン</div>
+</div>
+
+<script>
+(function(){
+  // ▼▼ Apps Script の「ウェブアプリ」URL をここに貼る（READMEの手順参照）▼▼
+  var ENDPOINT = "";
+  var form=document.getElementById('form'), btn=document.getElementById('btn'), err=document.getElementById('err'),
+      card=document.getElementById('card'), thanks=document.getElementById('thanks'),
+      hotBlock=document.getElementById('hotBlock'), kind=document.getElementById('kind'),
+      company=document.getElementById('company'), companyReq=document.getElementById('companyReq'), companyOpt=document.getElementById('companyOpt'),
+      thanksTitle=document.getElementById('thanksTitle'), thanksMsg=document.getElementById('thanksMsg'),
+      dirRadios=form.querySelectorAll('input[name="direction"]'),
+      modeRadios=form.querySelectorAll('input[name="mode"]');
+
+  function applyMode(){
+    var soft = form.querySelector('input[name="mode"]:checked').value === 'soft';
+    hotBlock.style.display = soft ? 'none' : 'flex';
+    company.required = !soft;                                  // ソフトは会社名 任意
+    companyReq.style.display = soft ? 'none' : 'inline';
+    companyOpt.style.display = soft ? 'inline' : 'none';
+    dirRadios.forEach(function(r){ r.required = !soft; });     // 興味の方向はホットのみ必須
+    kind.value = soft ? '案内・資料希望' : '無料相談';
+    btn.textContent = soft ? '案内を受け取る' : '無料相談を申し込む';
+  }
+  modeRadios.forEach(function(r){ r.addEventListener('change', applyMode); });
+  applyMode();
+
+  function showThanks(){
+    var soft = kind.value === '案内・資料希望';
+    thanksTitle.textContent = soft ? 'ありがとうございます。' : 'お申し込み、ありがとうございます。';
+    thanksMsg.textContent  = soft ? '次回の案内・資料を、ご記入のメール宛にお送りします。' : '2営業日以内に、ご記入のメールアドレス宛にご連絡します。';
+    card.style.display='none'; thanks.style.display='block'; window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault(); err.textContent='';
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+    var data = new URLSearchParams(new FormData(form));
+    btn.disabled=true; var label=btn.textContent; btn.textContent='送信中…';
+    if(!ENDPOINT){ console.log('[demo] 送信内容:', Object.fromEntries(data)); showThanks(); return; }
+    fetch(ENDPOINT, { method:'POST', mode:'no-cors', body:data })
+      .then(function(){ showThanks(); })
+      .catch(function(){ btn.disabled=false; btn.textContent=label; err.textContent='送信に失敗しました。通信環境をご確認のうえ、もう一度お試しください。'; });
+  });
+})();
+</script>
+</body>
+</html>
