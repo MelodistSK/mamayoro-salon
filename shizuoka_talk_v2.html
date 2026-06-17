@@ -34,6 +34,15 @@
   .cue .ch{width:10px;height:10px;border-right:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);transform:rotate(45deg);animation:bob 1.8s ease-in-out infinite}
   @keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0);opacity:.4}50%{transform:rotate(45deg) translate(3px,3px);opacity:1}}
 
+  /* ---- 種明かし：データベースの大型リビール ---- */
+  .megaword{font-family:var(--serif);font-weight:800;font-size:clamp(46px,10vw,124px);color:var(--gold-strong);letter-spacing:.03em;line-height:1.06;text-shadow:0 10px 55px rgba(234,180,100,.3)}
+  .megaword .g{color:var(--teal-bright)}
+  #s-reveal-5 .megaword.reveal{transform:scale(.84)}
+  #s-reveal-5 .megaword.reveal.in{transform:none}
+  .mono-sub{font-family:var(--mono);font-size:clamp(12px,1.8vw,16px);letter-spacing:.42em;color:var(--ink-3);margin-top:20px;text-transform:uppercase}
+  .qmark{font-family:var(--serif);font-weight:800;font-size:clamp(64px,13vw,160px);color:var(--gold);margin-top:8px;animation:qpulse 1.7s ease-in-out infinite}
+  @keyframes qpulse{0%,100%{transform:scale(1);text-shadow:0 0 0 rgba(234,180,100,0)}50%{transform:scale(1.07);text-shadow:0 8px 40px rgba(234,180,100,.4)}}
+
   /* ---- river stage ---- */
   #riverStage{position:relative;height:100vh;overflow:hidden;z-index:2;background:linear-gradient(180deg,#0e1418,#0c0f0c 60%,#100d09)}
   #rc{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -50,11 +59,18 @@
   #riverStage .rbtn{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.05em;color:#1a1408;background:linear-gradient(180deg,var(--gold-strong),var(--gold));border:none;cursor:pointer;padding:12px 28px;border-radius:100px;box-shadow:0 8px 26px rgba(234,180,100,.26),0 2px 0 rgba(255,255,255,.22) inset;transition:transform .25s,box-shadow .3s}
   #riverStage .rbtn:hover{transform:translateY(-2px)} #riverStage .rbtn:disabled{opacity:.5;transform:none}
   #riverStage .rbtn .h{display:block;font-family:var(--mono);font-weight:500;font-size:9.5px;letter-spacing:.14em;color:rgba(26,20,8,.55);margin-top:3px}
+  /* 川ステージ：ラベル/ステップ/ボタンは非表示（進行は口頭・→キー/クリック）。キャプションのみ表示 */
+  #riverStage .rlabel,#riverStage .rctrl{display:none!important}
 
   /* ---- CTA ---- */
   .qr{margin-top:34px;display:flex;flex-direction:column;align-items:center;gap:12px}
   .qrbox{width:150px;height:150px;border:1.5px dashed rgba(234,180,100,.5);border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;
     font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--ink-3);padding:14px;background:rgba(234,180,100,.05)}
+  /* QR：投影用に大型＋川の粒子が再集結して結晶化 */
+  .qrstage{position:relative;width:clamp(300px,46vh,560px);height:clamp(300px,46vh,560px);margin-top:10px}
+  #qrc{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .qrstage .qrbox{position:absolute;inset:0;width:auto;height:auto;border:none;border-radius:18px;background:#fff;padding:16px;opacity:0;transition:opacity .9s ease;box-shadow:0 22px 70px rgba(0,0,0,.55)}
+  .qrstage .qrbox img{width:100%;height:100%;object-fit:contain;display:block}
   .ctabtn{font-family:var(--sans);font-weight:700;font-size:16px;color:#1a1408;background:linear-gradient(180deg,var(--gold-strong),var(--gold));border:none;border-radius:100px;padding:14px 38px;box-shadow:0 10px 30px rgba(234,180,100,.3);cursor:pointer}
   .close{margin-top:46px;font-family:var(--serif);font-weight:700;font-size:clamp(18px,2.4vw,26px);color:var(--ink)}
   .close .t{color:var(--teal-bright)}
@@ -66,6 +82,21 @@
   .deck-nav .d.on{background:var(--gold);transform:scale(1.4)}
   .deck-hint{position:fixed;bottom:18px;right:22px;z-index:70;font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ink-3);opacity:.8;transition:opacity .6s;pointer-events:none}
   .deck-hint.hide{opacity:0}
+
+  /* ---- さらに: 全自動パイプライン ---- */
+  #s-auto{position:relative;min-height:100vh;overflow:hidden;z-index:2;background:linear-gradient(180deg,#0d120f,#0c0f0c 60%,#100d09)}
+  #ac{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #s-auto .a-head{position:absolute;top:7vh;left:0;right:0;text-align:center;z-index:4;padding:0 24px}
+  #s-auto .a-kick{font-family:var(--mono);font-size:11.5px;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;margin-bottom:14px}
+  #s-auto .a-title{font-family:var(--serif);font-weight:800;letter-spacing:.05em;font-size:clamp(22px,3.4vw,38px);line-height:1.3}
+  #s-auto .a-title .g{color:var(--gold-strong)}
+  #s-auto .a-sub{font-size:clamp(12.5px,1.6vw,15px);color:var(--ink-2);margin:14px auto 0;max-width:34em;line-height:1.9}
+  #s-auto .a-sub b{color:var(--ink);font-weight:700} #s-auto .a-sub .t{color:var(--teal-bright);font-weight:700}
+  #s-auto .a-caption{position:absolute;bottom:8vh;left:0;right:0;text-align:center;z-index:4;font-family:var(--serif);font-weight:700;font-size:clamp(16px,2.2vw,25px);color:var(--ink);padding:0 24px}
+  #s-auto .a-caption .g{color:var(--gold-strong)} #s-auto .a-caption .t{color:var(--teal-bright)}
+  #s-auto .a-auto{position:absolute;top:24px;right:24px;z-index:4;font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--teal-bright);display:flex;align-items:center;gap:8px}
+  #s-auto .a-led{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal);animation:ablink 1.3s ease-in-out infinite}
+  @keyframes ablink{0%,100%{opacity:1}50%{opacity:.25}}
 </style>
 </head>
 <body>
@@ -85,36 +116,72 @@
 <section id="riverStage" data-act="0">
   <canvas id="rc"></canvas>
   <div class="rlabel">点 → 引き → 線</div>
-  <div class="rcap"><div class="b" id="rCapB">石で、うまく流れていない。</div><div class="s" id="rCapS">上流から来た水が、ここで詰まっている。</div></div>
+  <div class="rcap"><div class="b" id="rCapB">石で、流れが悪い。</div><div class="s" id="rCapS">＝ 非効率で煩雑な、いまの作業。</div></div>
   <div class="rctrl">
     <div class="rsteps"><span class="rstp on" id="rS0">点</span><span class="rstp" id="rS1">引き</span><span class="rstp" id="rS2">線</span></div>
     <button class="rbtn" id="rBtn">▶ 石をどける<span class="h">クリック / → キー</span></button>
   </div>
 </section>
 
-<!-- 3. 種明かし -->
-<section class="panel" id="s-reveal">
+<!-- 3. 種明かし（分割：正体 → なぜ → どうする → 土台は？ → データベース） -->
+<section class="panel" id="s-reveal-1">
   <div class="kick reveal">さっきの“護岸工事”の、正体</div>
   <h2 class="big reveal" style="transition-delay:.08s">AIに、毎回やらせない。<br><span class="t">フローを、仕組みにする</span>。</h2>
-  <p class="lead reveal" style="transition-delay:.2s">AIは毎回その場で考える。便利だけど、不安定で、コストもかかる。<br>正解は、AIに<b>フローを解析させ、プログラムを書かせて</b>、その仕組みで動かすこと。<br>同じ入力なら、同じ答え。正確・速い・安い。</p>
-  <p class="tail reveal" style="transition-delay:.32s">そして、その仕組みの土台が——<span class="g">データベース</span>。</p>
+</section>
+
+<section class="panel" id="s-reveal-2">
+  <div class="kick reveal">なぜ、毎回やらせない？</div>
+  <h2 class="big reveal" style="transition-delay:.08s">AIは、毎回その場で考える。</h2>
+  <p class="lead reveal" style="transition-delay:.2s">便利。でも——<b>不安定</b>で、<b>コストもかかる</b>。</p>
+</section>
+
+<section class="panel" id="s-reveal-3">
+  <div class="kick reveal">だから、こうする</div>
+  <h2 class="big reveal" style="transition-delay:.08s">フローを解析させ、<br><span class="t">プログラムを書かせる</span>。</h2>
+  <p class="lead reveal" style="transition-delay:.2s">あとは、その“仕組み”が動くだけ。<br>同じ入力なら、同じ答え。<b>正確・速い・安い。</b></p>
+</section>
+
+<section class="panel" id="s-reveal-4">
+  <h2 class="big reveal">そして、その“仕組み”の<br><span class="t">土台</span>になるものが——</h2>
+  <div class="qmark">？</div>
+</section>
+
+<section class="panel" id="s-reveal-5">
+  <div class="kick reveal">その正体は</div>
+  <h2 class="megaword reveal" style="transition-delay:.12s">データベース<span class="g">.</span></h2>
+  <div class="mono-sub reveal" style="transition-delay:.34s">Database</div>
+  <p class="lead reveal" style="transition-delay:.5s">すべての“仕組み”が、ここに乗っている。<br>土台が整うほど、上はどこまでも自動化できる。</p>
+  <p class="tail reveal" style="transition-delay:.66s">——<span class="g">どういうことか、実演します。</span></p>
 </section>
 
 <!-- 4. 僕たちの世界 -->
 <section class="panel" id="s-three">
   <div class="kick reveal">やることは、3つ</div>
-  <h2 class="big reveal" style="transition-delay:.08s">①整える ②書かせる ③動かす。</h2>
-  <p class="lead reveal" style="transition-delay:.2s">シンプル。でも、それぞれに、けっこうな知識と泥臭い作業が要ります。<br>だからここから先は、正直、<b>僕たちの仕事</b>です。</p>
-  <p class="tail reveal" style="transition-delay:.32s">道は2つ。<b style="color:var(--ink)">学ぶ</b>か、<b style="color:var(--ink)">任せる</b>か。どちらも正解。</p>
+  <h2 class="big reveal" style="transition-delay:.08s">①フローを棚卸する<br>②効率的な仕組みを設計する<br>③動かす</h2>
 </section>
 
-<!-- 5. CTA -->
+<!-- 5. さらに: 全自動パイプライン -->
+<section id="s-auto">
+  <canvas id="ac"></canvas>
+  <div class="a-auto"><span class="a-led"></span><span id="aAutoTxt">自動運転中</span></div>
+  <div class="a-head">
+    <div class="a-kick">さらに ——</div>
+    <h2 class="a-title">入力から資料完成まで、<span class="g">全自動</span>。</h2>
+    <p class="a-sub">最上流の<b>会員フォーム</b>から、データが勝手に流れ込み、途中で自動的に<span class="t">パワポ</span>になって出てくる。</p>
+  </div>
+  <div class="a-caption">人は、<span class="g">一切</span>手を動かさない。</div>
+</section>
+
+<!-- 6. CTA -->
 <section class="panel" id="s-cta">
   <div class="kick reveal">ただ、ひとつだけ</div>
   <h2 class="big reveal" style="transition-delay:.08s">どこを整えると効くかは、<br><span class="g">会社ごとに、ちがう</span>。</h2>
-  <p class="lead reveal" style="transition-delay:.2s">あなたの会社の“効く一カ所”は、別問題。<br>無料相談で、そこを一緒に見つけます。構築でも、学習でも。</p>
+  <p class="lead reveal" style="transition-delay:.2s">無料相談で、そこを一緒に見つけます。構築でも、学習でも。</p>
   <div class="qr reveal" style="transition-delay:.32s">
-    <div class="qrbox" style="background:#fff;border-style:solid;padding:8px"><img src="qr_form.png" alt="無料相談・案内のお申し込みフォーム" style="width:100%;height:100%;object-fit:contain;display:block"></div>
+    <div class="qrstage" id="qrStage">
+      <canvas id="qrc"></canvas>
+      <div class="qrbox" id="qrBox"><img id="qrImg" alt="無料相談・案内のお申し込みフォーム"></div>
+    </div>
     <button class="ctabtn" onclick="(typeof sendPrompt==='function')&&sendPrompt('無料相談を申し込みたい')">無料相談へ</button>
   </div>
   <div class="close reveal" style="transition-delay:.44s">点で、止めない。<span class="t">線</span>に、しよう。</div>
@@ -247,10 +314,10 @@
   var capB=document.getElementById('rCapB'),capS=document.getElementById('rCapS'),btn=document.getElementById('rBtn');
   var stp=[document.getElementById('rS0'),document.getElementById('rS1'),document.getElementById('rS2')];
   var caps=[
-    {b:'石で、うまく流れていない。', s:'上流から来た水が、ここで詰まっている。', btn:'▶ 石をどける', step:0},
-    {b:'石を寄せると、<span class="t">流れる</span>。', s:'どけた石は、岸へ。ここはスムーズに。&nbsp;＝&nbsp;<span class="em">点</span>', btn:'▶ 引いて、全体を見る', step:0},
-    {b:'点の効率化は、<span class="t">あちこちで</span>。', s:'どの石も、どけてきた。— でも、川はまだ、曲がりくねってバラバラ。', btn:'▶ 護岸工事をする', step:1},
-    {b:'護岸で、川ごと<span class="g">一本の線に</span>。', s:'バラバラの流れが、まっすぐ一直線へ。&nbsp;＝&nbsp;<span class="em">線</span>', btn:'↺ もう一度', step:2}
+    {b:'石で、流れが悪い。', s:'＝ 非効率で煩雑な、いまの作業。', btn:'▶', step:0},
+    {b:'石をどけると、<span class="t">流れる</span>。', s:'AIで効率化した状態。&nbsp;＝&nbsp;<span class="em">点</span>の効率化', btn:'▶', step:0},
+    {b:'点では流れても、全体を見るとまだ。', s:'流れの悪い部分が、残っている。', btn:'▶', step:1},
+    {b:'護岸工事を行うと、全体が<span class="t">綺麗に流れる</span>。', s:'＝&nbsp;<span class="em">線</span>', btn:'▶', step:2}
   ];
   function paint(i){ capB.innerHTML=caps[i].b; capS.innerHTML=caps[i].s; btn.innerHTML=caps[i].btn+'<span class="h">クリック / → キー</span>';
     stp.forEach(function(e,idx){ e.classList.toggle('on',idx===caps[i].step); e.classList.toggle('done',idx<caps[i].step); });
@@ -269,6 +336,186 @@
   cv.addEventListener('click',go);
   /* expose to deck controller: river consumes forward-presses until 線, then deck advances */
   window.river={ go:go, done:function(){ return act>=3; }, animating:function(){ return animating; } };
+})();
+
+/* ===== さらに: 全自動パイプライン (section #s-auto) ===== */
+(function(){
+  var sec=document.getElementById('s-auto'); if(!sec) return;
+  var cv=document.getElementById('ac'), ctx=cv.getContext('2d');
+  var W,H,DPR;
+  var col={gold:"#eab464",goldS:"#f3c479",teal:"#79c7bf",tealB:"#bdeffa",coral:"#e2906f",ink:"#f5ede0",ink2:"#cabfae",ink3:"#8a7f6d"};
+  var MEMBERS=[
+    {name:"佐藤 健一",date:"8月5日"},{name:"鈴木 美咲",date:"8月14日"},{name:"田中 大輔",date:"8月27日"},
+    {name:"山本 彩",date:"5月3日"},{name:"中村 蓮",date:"11月9日"},{name:"小林 さつき",date:"3月22日"},
+    {name:"加藤 美穂",date:"9月8日"},{name:"渡辺 由美",date:"7月7日"}
+  ];
+  var nodeXr=[0.135,0.385,0.635,0.875], baseYr=0.575, nodes=[];
+  function layout(){ nodes=nodeXr.map(function(r){return r*W;}); }
+  function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=sec.clientWidth||window.innerWidth; H=sec.clientHeight||window.innerHeight;
+    cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); layout(); initParts(); }
+  window.addEventListener('resize',resize);
+  function baseY(){ return H*baseYr; }
+  function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+  var parts=[];
+  function initParts(){ parts=[]; var n=Math.min(150,Math.floor(W/9));
+    for(var i=0;i<n;i++) parts.push({x:Math.random()*W, off:(Math.random()*2-1), v:60+Math.random()*70, s:0.8+Math.random()*1.6}); }
+
+  var items, spawnAcc, SPAWN=1.55, mi, counters, dbGlow, pgPulse, outGlow, gear, formT, formMember, stack, pxPerSec;
+  function reset(){ items=[]; spawnAcc=0; mi=0; counters={in:0,out:0}; dbGlow=0;pgPulse=0;outGlow=0;gear=0;formT=0;formMember=MEMBERS[0];stack=[]; spawn(); }
+  function spawn(){ formMember=MEMBERS[mi%MEMBERS.length]; formT=0; items.push({m:formMember,x:nodes[0],dDB:false,dPG:false}); mi++; }
+
+  function channel(){ var y=baseY(), h=Math.max(46,H*0.085), x0=nodes[0], x1=nodes[3];
+    var g=ctx.createLinearGradient(0,y-h/2,0,y+h/2);
+    g.addColorStop(0,"rgba(234,180,100,.05)"); g.addColorStop(.5,"rgba(121,199,191,.08)"); g.addColorStop(1,"rgba(234,180,100,.05)");
+    ctx.fillStyle=g; ctx.fillRect(x0-30,y-h/2,(x1-x0)+60,h);
+    ctx.strokeStyle="rgba(234,180,100,.45)"; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x0-30,y-h/2); ctx.lineTo(x1+30,y-h/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x0-30,y+h/2); ctx.lineTo(x1+30,y+h/2); ctx.stroke(); return h; }
+  function flow(dt,h){ var y=baseY(); ctx.globalCompositeOperation="lighter";
+    for(var i=0;i<parts.length;i++){ var p=parts[i]; p.x+=p.v*dt; if(p.x>nodes[3]+30) p.x=nodes[0]-30;
+      var yy=y+p.off*(h*0.34), a=0.10+0.10*p.s;
+      ctx.strokeStyle="rgba(150,214,202,"+a.toFixed(3)+")"; ctx.lineWidth=p.s;
+      ctx.beginPath(); ctx.moveTo(p.x,yy); ctx.lineTo(p.x-7-p.v*0.04,yy); ctx.stroke(); }
+    ctx.globalCompositeOperation="source-over"; }
+  function label(x,y,big,small,color){ ctx.textAlign="center";
+    ctx.font='700 '+Math.max(13,W*0.0118)+'px "Zen Kaku Gothic New",system-ui,sans-serif'; ctx.fillStyle=color||col.ink; ctx.fillText(big,x,y);
+    if(small){ ctx.font='500 '+Math.max(10.5,W*0.0088)+'px "JetBrains Mono",monospace'; ctx.fillStyle=col.ink3; ctx.fillText(small,x,y+Math.max(17,W*0.014)); } }
+  function drawForm(x,y,glow){ var w=Math.max(96,W*0.082), h=w*0.78, fx=x-w/2, fy=y-h/2;
+    ctx.save(); ctx.shadowColor="rgba(234,180,100,"+(0.25+0.4*glow)+")"; ctx.shadowBlur=18+30*glow;
+    rr(fx,fy,w,h,10); ctx.fillStyle="#15110b"; ctx.fill();
+    ctx.shadowBlur=0; ctx.lineWidth=1.4; ctx.strokeStyle="rgba(234,180,100,"+(0.5+0.4*glow)+")"; rr(fx,fy,w,h,10); ctx.stroke();
+    rr(fx,fy,w,h*0.2,10); ctx.fillStyle="rgba(234,180,100,.16)"; ctx.fill();
+    ctx.textAlign="left"; ctx.font='700 '+Math.max(9,w*0.105)+'px "Zen Kaku Gothic New",sans-serif'; ctx.fillStyle=col.gold; ctx.fillText("入力フォーム",fx+10,fy+h*0.135);
+    var nm=formMember.name, dt=formMember.date;
+    var nShown=Math.floor(Math.min(1,formT/0.6)*nm.length), dShown=Math.floor(Math.max(0,Math.min(1,(formT-0.6)/0.6))*dt.length);
+    ctx.font='500 '+Math.max(9,w*0.1)+'px "Zen Kaku Gothic New",sans-serif';
+    ctx.fillStyle=col.ink3; ctx.fillText("お名前",fx+10,fy+h*0.42);
+    ctx.fillStyle=col.ink; ctx.fillText(nm.slice(0,nShown)+(nShown<nm.length&&(formT*2|0)%2?"｜":""),fx+10,fy+h*0.58);
+    ctx.fillStyle=col.ink3; ctx.fillText("誕生日",fx+10,fy+h*0.78);
+    ctx.fillStyle=col.tealB; ctx.fillText(dt.slice(0,dShown)+(dShown<dt.length&&nShown>=nm.length&&(formT*2|0)%2?"｜":""),fx+10,fy+h*0.94);
+    ctx.restore(); return h; }
+  function drawDB(x,y,glow){ var w=Math.max(70,W*0.058), h=w*1.0, rxv=w/2, ry=h*0.16, top=y-h/2;
+    ctx.save(); ctx.shadowColor="rgba(121,199,191,"+(0.2+0.5*glow)+")"; ctx.shadowBlur=14+34*glow; ctx.fillStyle="#12211d";
+    ctx.beginPath(); ctx.moveTo(x-rxv,top+ry); ctx.lineTo(x-rxv,top+h-ry);
+    ctx.ellipse(x,top+h-ry,rxv,ry,0,Math.PI,0,true); ctx.lineTo(x+rxv,top+ry); ctx.ellipse(x,top+ry,rxv,ry,0,0,Math.PI,false); ctx.closePath(); ctx.fill();
+    ctx.shadowBlur=0; ctx.strokeStyle="rgba(121,199,191,"+(0.45+0.4*glow)+")"; ctx.lineWidth=1.4; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(x,top+ry,rxv,ry,0,0,Math.PI*2); ctx.fillStyle="rgba(121,199,191,"+(0.18+0.3*glow)+")"; ctx.fill(); ctx.stroke();
+    ctx.strokeStyle="rgba(121,199,191,.25)"; ctx.lineWidth=1;
+    for(var k=1;k<=2;k++){ var yy=top+ry+(h-2*ry)*(k/3); ctx.beginPath(); ctx.ellipse(x,yy,rxv,ry,0,0.15,Math.PI-0.15); ctx.stroke(); }
+    ctx.restore(); return h; }
+  function drawGear(x,y,glow){ var R=Math.max(30,W*0.027), teeth=10;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(gear);
+    ctx.shadowColor="rgba(234,180,100,"+(0.25+0.5*glow)+")"; ctx.shadowBlur=12+30*glow; ctx.beginPath();
+    for(var i=0;i<teeth;i++){ var a0=i/teeth*Math.PI*2, a1=(i+0.5)/teeth*Math.PI*2, a2=(i+1)/teeth*Math.PI*2, ro=R, ri=R*0.78;
+      ctx.lineTo(Math.cos(a0)*ro,Math.sin(a0)*ro); ctx.lineTo(Math.cos(a0+0.12)*ro,Math.sin(a0+0.12)*ro);
+      ctx.lineTo(Math.cos(a1)*ri,Math.sin(a1)*ri); ctx.lineTo(Math.cos(a2-0.12)*ri,Math.sin(a2-0.12)*ri); ctx.lineTo(Math.cos(a2)*ro,Math.sin(a2)*ro); }
+    ctx.closePath(); ctx.fillStyle="#1b1610"; ctx.fill();
+    ctx.shadowBlur=0; ctx.lineWidth=1.6; ctx.strokeStyle="rgba(234,180,100,"+(0.6+0.35*glow)+")"; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,R*0.34,0,Math.PI*2); ctx.fillStyle="#0d120f"; ctx.fill(); ctx.strokeStyle="rgba(234,180,100,.5)"; ctx.stroke();
+    ctx.restore(); return R*2; }
+  function slideCard(x,y,sc,name,alpha){ var w=Math.max(60,W*0.05)*sc, h=w*0.62;
+    ctx.save(); ctx.globalAlpha=alpha==null?1:alpha; ctx.shadowColor="rgba(0,0,0,.5)"; ctx.shadowBlur=10;
+    rr(x-w/2,y-h/2,w,h,5); ctx.fillStyle="#13302a"; ctx.fill(); ctx.shadowBlur=0;
+    ctx.lineWidth=1.2; ctx.strokeStyle=col.gold; rr(x-w/2,y-h/2,w,h,5); ctx.stroke();
+    ctx.fillStyle=col.goldS; ctx.font='700 '+(w*0.13)+'px "Shippori Mincho B1",serif'; ctx.textAlign="center"; ctx.fillText(name?name+" 様":"🎉",x,y-h*0.04);
+    ctx.fillStyle=col.ink2; ctx.font='400 '+(w*0.095)+'px "Zen Kaku Gothic New",sans-serif'; ctx.fillText("おめでとうございます",x,y+h*0.22);
+    ctx.restore(); return w; }
+
+  var running=false, last=0;
+  function frame(now){ if(!running) return;
+    var dt=Math.min(0.05,(now-last)/1000); last=now;
+    gear+=dt*(1.3+pgPulse*5); formT+=dt; dbGlow*=0.92; pgPulse*=0.9; outGlow*=0.92;
+    spawnAcc+=dt; if(spawnAcc>=SPAWN){ spawnAcc-=SPAWN; spawn(); }
+    var x0=nodes[0], x3=nodes[3]; pxPerSec=(x3-x0)/5.0; var y=baseY();
+    ctx.fillStyle="rgba(13,18,15,0.32)"; ctx.fillRect(0,0,W,H);
+    var h=channel(); flow(dt,h);
+    for(var i=items.length-1;i>=0;i--){ var it=items[i]; it.x+=pxPerSec*dt;
+      if(!it.dDB && it.x>=nodes[1]){ it.dDB=true; counters.in++; dbGlow=1; }
+      if(!it.dPG && it.x>=nodes[2]){ it.dPG=true; pgPulse=1; }
+      if(it.x>=nodes[3]){ counters.out++; outGlow=1; stack.push(it.m); if(stack.length>6)stack.shift(); items.splice(i,1); continue; }
+      var fade=Math.min(1,(it.x-x0)/40);
+      if(it.x<nodes[2]){ ctx.save(); ctx.globalAlpha=fade; ctx.shadowColor="rgba(234,180,100,.8)"; ctx.shadowBlur=14;
+        ctx.beginPath(); ctx.arc(it.x,y,Math.max(6,W*0.006),0,Math.PI*2); ctx.fillStyle=col.goldS; ctx.fill();
+        ctx.shadowBlur=0; ctx.globalAlpha=fade*0.95; ctx.font='700 '+Math.max(10,W*0.0085)+'px "Zen Kaku Gothic New",sans-serif';
+        var t=it.m.name, pad=7, twv=ctx.measureText(t).width;
+        rr(it.x-twv/2-pad,y-h*0.5-26,twv+pad*2,19,6); ctx.fillStyle="rgba(21,17,11,.85)"; ctx.fill();
+        ctx.fillStyle=col.gold; ctx.textAlign="center"; ctx.fillText(t,it.x,y-h*0.5-12.5); ctx.restore();
+      } else { var sc=Math.min(1,(it.x-nodes[2])/60); slideCard(it.x,y,0.6+0.4*sc,it.m.name,fade); } }
+    drawForm(nodes[0],y,(spawnAcc<0.25?0.6:0));
+    label(nodes[0], y+ (Math.max(96,W*0.082)*0.78)*0.5+30, "会員フォーム入力", "UPSTREAM / 上流", col.gold);
+    var dh=drawDB(nodes[1],y,dbGlow);
+    label(nodes[1], y+dh*0.5+26, "データベース", "AUTO IMPORT / 自動取込", col.teal);
+    ctx.textAlign="center"; ctx.font='700 '+Math.max(11,W*0.0092)+'px "JetBrains Mono",monospace'; ctx.fillStyle=col.tealB; ctx.fillText("取込 "+counters.in+" 件", nodes[1], y-dh*0.5-14);
+    var gh=drawGear(nodes[2],y,pgPulse);
+    label(nodes[2], y+gh*0.5+30, "プログラム自動生成", "AUTO BUILD / 無人", col.gold);
+    var ox=nodes[3], oy=y;
+    for(var s=0;s<stack.length;s++){ var off=(stack.length-1-s); slideCard(ox+off*3, oy-off*4, 0.9, null, 0.35+0.65*(s/Math.max(1,stack.length-1))); }
+    slideCard(ox,oy,1.0, stack.length?stack[stack.length-1]:null, 1);
+    label(nodes[3], y+(W*0.05*0.62)+44, "パワポ完成", "DONE / 完成", col.gold);
+    ctx.textAlign="center"; ctx.font='700 '+Math.max(11,W*0.0092)+'px "JetBrains Mono",monospace'; ctx.fillStyle=col.goldS; ctx.fillText("生成 "+counters.out+" 枚", nodes[3], oy-(W*0.05*0.62)-20);
+    requestAnimationFrame(frame);
+  }
+
+  var io=new IntersectionObserver(function(es){ es.forEach(function(e){
+    if(e.isIntersecting && e.intersectionRatio>0.5){ resize(); reset(); running=true; last=performance.now(); requestAnimationFrame(frame); }
+    else { running=false; }
+  }); },{threshold:[0,0.5,1]});
+  resize(); io.observe(sec);
+})();
+
+/* ===== CTA: 川の流れが分散 → 再集結してQRに結晶化 ===== */
+(function(){
+  var sec=document.getElementById('s-cta'); if(!sec) return;
+  var stage=document.getElementById('qrStage'); if(!stage) return;
+  var cv=document.getElementById('qrc'), ctx=cv.getContext('2d');
+  var box=document.getElementById('qrBox'), img=document.getElementById('qrImg');
+  var QRSRC="data:image/png;base64,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";
+  var W=0,H=0,DPR=1, targets=[], N=58, parts=[], ready=false, snap=false;
+  var goldA=[234,180,100], goldB=[243,196,121], teal=[150,214,202];
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function size(){ DPR=Math.min(devicePixelRatio||1,2); W=stage.clientWidth; H=stage.clientHeight; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+
+  var srcImg=new Image();
+  srcImg.onload=function(){ build(); img.src=QRSRC; ready=true; };
+  srcImg.onerror=function(){ img.src=QRSRC; ready=true; };
+  srcImg.src=QRSRC;
+
+  function build(){ var oc=document.createElement('canvas'); oc.width=N; oc.height=N; var o=oc.getContext('2d');
+    o.drawImage(srcImg,0,0,N,N); var d=null; try{ d=o.getImageData(0,0,N,N).data; }catch(e){ d=null; }
+    targets=[]; if(!d) return;
+    for(var j=0;j<N;j++)for(var i=0;i<N;i++){ var k=(j*N+i)*4, lum=d[k]*0.299+d[k+1]*0.587+d[k+2]*0.114; if(lum<128) targets.push([i,j]); } }
+  function setup(){ size(); var cell=W/N; parts=targets.map(function(t){ return {
+      tx:(t[0]+0.5)*cell, ty:(t[1]+0.5)*cell, cell:cell,
+      x:(Math.random()*1.6-0.3)*W, y:(Math.random()*1.2-0.1)*H,
+      vx:40+Math.random()*120, vy:(Math.random()*2-1)*22,
+      col: Math.random()<0.16?teal:(Math.random()<0.5?goldA:goldB) }; }); snap=false; }
+
+  var start=0, phase='idle', raf=0, FLOW=0.85, CONV=1.6;
+  function ease(p){ return p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2; }
+  function frame(now){ if(phase==='idle') return;
+    var t=(now-start)/1000; ctx.clearRect(0,0,W,H);
+    if(t<FLOW){ ctx.globalCompositeOperation='lighter';
+      for(var i=0;i<parts.length;i++){ var p=parts[i]; p.x+=p.vx*0.016; if(p.x>W+20)p.x=-20; p.y+=p.vy*0.016;
+        var c=p.col,s=Math.max(2,p.cell*0.5); ctx.fillStyle='rgba('+c[0]+','+c[1]+','+c[2]+',0.45)'; ctx.fillRect(p.x-s/2,p.y-s/2,s,s); }
+      ctx.globalCompositeOperation='source-over';
+    } else if(t<FLOW+CONV){ if(!snap){ for(var a=0;a<parts.length;a++){ parts[a].sx=parts[a].x; parts[a].sy=parts[a].y; } snap=true; }
+      var pr=ease((t-FLOW)/CONV);
+      for(var j=0;j<parts.length;j++){ var q=parts[j], x=q.sx+(q.tx-q.sx)*pr, y=q.sy+(q.ty-q.sy)*pr, al=0.5+0.5*pr, s2=q.cell*(0.5+0.34*pr), c2=q.col;
+        ctx.fillStyle='rgba('+c2[0]+','+c2[1]+','+c2[2]+','+al.toFixed(2)+')'; ctx.fillRect(x-s2/2,y-s2/2,s2,s2); }
+    } else { for(var k=0;k<parts.length;k++){ var r=parts[k],s3=r.cell*0.86,c3=r.col; ctx.fillStyle='rgb('+c3[0]+','+c3[1]+','+c3[2]+')'; ctx.fillRect(r.tx-s3/2,r.ty-s3/2,s3,s3); }
+      box.style.opacity='1';
+      if(phase==='run'){ phase='stopping'; setTimeout(function(){ phase='idle'; },1300); } }
+    raf=requestAnimationFrame(frame); }
+  function play(){ if(!ready){ setTimeout(play,120); return; }
+    size();
+    if(reduce || !targets.length){ box.style.opacity='1'; ctx.clearRect(0,0,W,H); return; }
+    setup(); box.style.opacity='0'; start=performance.now(); phase='run'; cancelAnimationFrame(raf); raf=requestAnimationFrame(frame); }
+
+  window.addEventListener('resize',function(){ if(phase==='idle') size(); });
+  var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting&&e.intersectionRatio>0.5) play(); }); },{threshold:[0,0.5,1]});
+  io.observe(sec);
 })();
 
 /* ===== deck controller: 1画面ずつ送る + 川ブリッジ ===== */
@@ -291,8 +538,4 @@
     else if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp'){ e.preventDefault(); prev(); }
   });
   var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting && e.intersectionRatio>0.55){ var i=secs.indexOf(e.target); if(i>=0) setCur(i); } }); },{threshold:[0,0.55,1]});
-  secs.forEach(function(s){ io.observe(s); });
-})();
-</script>
-</body>
-</html>
+  secs.forEa

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>さらに —— 入力から完成まで、全自動。｜ ままよろサロン</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#eab464;--gold-strong:#f3c479;--teal:#79c7bf;--teal-bright:#bdeffa;--coral:#e2906f;
+    --ink:#f5ede0;--ink-2:#cabfae;--ink-3:#8a7f6d;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#0d120f;color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;overflow:hidden;
+    background-image:radial-gradient(120% 90% at 10% -5%,rgba(234,180,100,.08),transparent 55%),radial-gradient(90% 80% at 100% 110%,rgba(121,199,191,.06),transparent 50%);}
+  #cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+  .kick{position:fixed;top:30px;left:0;right:0;text-align:center;z-index:3;font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.4em;color:var(--gold);text-transform:uppercase}
+  .title{position:fixed;top:50px;left:0;right:0;text-align:center;z-index:3;font-family:"Shippori Mincho B1",serif;font-weight:800;letter-spacing:.05em;font-size:clamp(22px,3.4vw,38px)}
+  .title .g{color:var(--gold-strong)} .title .t{color:var(--teal-bright)}
+  .sub{position:fixed;top:calc(50px + clamp(34px,4.6vw,54px));left:0;right:0;text-align:center;z-index:3;font-size:clamp(12.5px,1.6vw,15px);color:var(--ink-2)}
+  .auto{position:fixed;top:26px;right:26px;z-index:3;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;color:var(--teal-bright);display:flex;align-items:center;gap:8px}
+  .auto .led{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal);animation:bl 1.3s ease-in-out infinite}
+  @keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}
+  .caption{position:fixed;bottom:34px;left:0;right:0;text-align:center;z-index:3;font-family:"Shippori Mincho B1",serif;font-weight:700;font-size:clamp(16px,2.2vw,25px);color:var(--ink)}
+  .caption .g{color:var(--gold-strong)} .caption .t{color:var(--teal-bright)}
+  .hint{position:fixed;bottom:12px;right:18px;z-index:3;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;color:var(--ink-3)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="auto" id="autoTag"><span class="led"></span><span id="autoTxt">自動運転中</span></div>
+<div class="kick">さらに ——</div>
+<div class="title">入力から資料完成まで、<span class="g">全自動</span>。</div>
+<div class="sub">最上流の<b style="color:var(--ink)">会員フォーム</b>から、データが勝手に流れ込み、途中で自動的に<span class="t">パワポ</span>になって出てくる。</div>
+<div class="caption">人は、<span class="g">一切</span>手を動かさない。</div>
+<div class="hint">Space : 一時停止 / 再開</div>
+
+<script>
+(function(){
+  "use strict";
+  var cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+  var W,H,DPR;
+  var col={gold:"#eab464",goldS:"#f3c479",teal:"#79c7bf",tealB:"#bdeffa",coral:"#e2906f",ink:"#f5ede0",ink2:"#cabfae",ink3:"#8a7f6d"};
+
+  var MEMBERS=[
+    {name:"佐藤 健一",date:"8月5日"},{name:"鈴木 美咲",date:"8月14日"},{name:"田中 大輔",date:"8月27日"},
+    {name:"山本 彩",date:"5月3日"},{name:"中村 蓮",date:"11月9日"},{name:"小林 さつき",date:"3月22日"},
+    {name:"加藤 美穂",date:"9月8日"},{name:"渡辺 由美",date:"7月7日"}
+  ];
+
+  // layout
+  var nodeXr=[0.135,0.385,0.635,0.875], baseYr=0.575;
+  var nodes=[]; // computed px
+  function layout(){ nodes=nodeXr.map(function(r){return r*W;}); }
+
+  function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=window.innerWidth; H=window.innerHeight;
+    cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); layout(); }
+  window.addEventListener("resize",resize); resize();
+
+  function baseY(){ return H*baseYr; }
+  function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+  // particles flowing along the channel (ambiance)
+  var parts=[];
+  function initParts(){ parts=[]; var n=Math.min(150,Math.floor(W/9));
+    for(var i=0;i<n;i++) parts.push({x:Math.random()*W, off:(Math.random()*2-1), v:60+Math.random()*70, s:0.8+Math.random()*1.6}); }
+  initParts();
+
+  // items moving through the pipeline
+  var items=[], spawnAcc=0, SPAWN=1.55, mi=0;
+  var counters={in:0, out:0}, dbGlow=0, pgPulse=0, outGlow=0, gear=0, formT=0, formMember=MEMBERS[0], stack=[];
+  var pxPerSec; // speed so it crosses field in ~ fixed time
+
+  function spawn(){ formMember=MEMBERS[mi%MEMBERS.length]; formT=0;
+    items.push({m:formMember, x:nodes[0], dDB:false, dPG:false, born:0}); mi++; }
+
+  var running=true, last=performance.now();
+  document.addEventListener("keydown",function(e){ if(e.code==="Space"||e.key===" "){ e.preventDefault(); running=!running;
+    document.getElementById("autoTxt").textContent=running?"自動運転中":"一時停止中"; if(running){ last=performance.now(); requestAnimationFrame(frame);} } });
+
+  // ---------- drawing ----------
+  function channel(){
+    var y=baseY(), h=Math.max(46,H*0.085), x0=nodes[0], x1=nodes[3];
+    // straight "line" channel (= 護岸完了後の線)
+    var g=ctx.createLinearGradient(0,y-h/2,0,y+h/2);
+    g.addColorStop(0,"rgba(234,180,100,.05)"); g.addColorStop(.5,"rgba(121,199,191,.08)"); g.addColorStop(1,"rgba(234,180,100,.05)");
+    ctx.fillStyle=g; ctx.fillRect(x0-30,y-h/2,(x1-x0)+60,h);
+    ctx.strokeStyle="rgba(234,180,100,.45)"; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x0-30,y-h/2); ctx.lineTo(x1+30,y-h/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x0-30,y+h/2); ctx.lineTo(x1+30,y+h/2); ctx.stroke();
+    return h;
+  }
+  function flow(dt,h){
+    var y=baseY();
+    ctx.globalCompositeOperation="lighter";
+    for(var i=0;i<parts.length;i++){ var p=parts[i]; p.x+=p.v*dt; if(p.x>nodes[3]+30){ p.x=nodes[0]-30; }
+      var yy=y+p.off*(h*0.34); var a=0.10+0.10*p.s;
+      ctx.strokeStyle="rgba(150,214,202,"+a.toFixed(3)+")"; ctx.lineWidth=p.s;
+      ctx.beginPath(); ctx.moveTo(p.x,yy); ctx.lineTo(p.x-7-p.v*0.04,yy); ctx.stroke(); }
+    ctx.globalCompositeOperation="source-over";
+  }
+
+  function label(x,y,big,small,color){
+    ctx.textAlign="center";
+    ctx.font='700 '+Math.max(13,W*0.0118)+'px "Zen Kaku Gothic New",system-ui,sans-serif';
+    ctx.fillStyle=color||col.ink; ctx.fillText(big,x,y);
+    if(small){ ctx.font='500 '+Math.max(10.5,W*0.0088)+'px "JetBrains Mono",monospace'; ctx.fillStyle=col.ink3; ctx.fillText(small,x,y+Math.max(17,W*0.014)); }
+  }
+
+  function drawForm(x,y,glow){
+    var w=Math.max(96,W*0.082), h=w*0.78; var fx=x-w/2, fy=y-h/2;
+    ctx.save();
+    ctx.shadowColor="rgba(234,180,100,"+(0.25+0.4*glow)+")"; ctx.shadowBlur=18+30*glow;
+    rr(fx,fy,w,h,10); ctx.fillStyle="#15110b"; ctx.fill();
+    ctx.shadowBlur=0; ctx.lineWidth=1.4; ctx.strokeStyle="rgba(234,180,100,"+(0.5+0.4*glow)+")"; rr(fx,fy,w,h,10); ctx.stroke();
+    // header bar
+    rr(fx,fy,w,h*0.2,10); ctx.fillStyle="rgba(234,180,100,.16)"; ctx.fill();
+    ctx.textAlign="left";
+    ctx.font='700 '+Math.max(9,w*0.105)+'px "Zen Kaku Gothic New",sans-serif'; ctx.fillStyle=col.gold;
+    ctx.fillText("入力フォーム",fx+10,fy+h*0.135);
+    // typed fields
+    var nm=formMember.name, dt=formMember.date;
+    var nShown=Math.floor(Math.min(1,formT/0.6)*nm.length);
+    var dShown=Math.floor(Math.max(0,Math.min(1,(formT-0.6)/0.6))*dt.length);
+    ctx.font='500 '+Math.max(9,w*0.1)+'px "Zen Kaku Gothic New",sans-serif';
+    ctx.fillStyle=col.ink3; ctx.fillText("お名前",fx+10,fy+h*0.42);
+    ctx.fillStyle=col.ink; ctx.fillText(nm.slice(0,nShown)+(nShown<nm.length&&(formT*2|0)%2?"｜":""),fx+10,fy+h*0.58);
+    ctx.fillStyle=col.ink3; ctx.fillText("誕生日",fx+10,fy+h*0.78);
+    ctx.fillStyle=col.tealB; ctx.fillText(dt.slice(0,dShown)+(dShown<dt.length&&nShown>=nm.length&&(formT*2|0)%2?"｜":""),fx+10,fy+h*0.94);
+    ctx.restore();
+    return h;
+  }
+  function drawDB(x,y,glow){
+    var w=Math.max(70,W*0.058), h=w*1.0; var rxv=w/2, ry=h*0.16, top=y-h/2;
+    ctx.save();
+    ctx.shadowColor="rgba(121,199,191,"+(0.2+0.5*glow)+")"; ctx.shadowBlur=14+34*glow;
+    ctx.fillStyle="#12211d";
+    ctx.beginPath(); ctx.moveTo(x-rxv,top+ry); ctx.lineTo(x-rxv,top+h-ry);
+    ctx.ellipse(x,top+h-ry,rxv,ry,0,Math.PI,0,true); ctx.lineTo(x+rxv,top+ry); ctx.ellipse(x,top+ry,rxv,ry,0,0,Math.PI,false); ctx.closePath(); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.strokeStyle="rgba(121,199,191,"+(0.45+0.4*glow)+")"; ctx.lineWidth=1.4; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(x,top+ry,rxv,ry,0,0,Math.PI*2); ctx.fillStyle="rgba(121,199,191,"+(0.18+0.3*glow)+")"; ctx.fill(); ctx.stroke();
+    // disk lines
+    ctx.strokeStyle="rgba(121,199,191,.25)"; ctx.lineWidth=1;
+    for(var k=1;k<=2;k++){ var yy=top+ry+ (h-2*ry)*(k/3); ctx.beginPath(); ctx.ellipse(x,yy,rxv,ry,0,0.15,Math.PI-0.15); ctx.stroke(); }
+    ctx.restore();
+    return h;
+  }
+  function drawGear(x,y,glow){
+    var R=Math.max(30,W*0.027), teeth=10;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(gear);
+    ctx.shadowColor="rgba(234,180,100,"+(0.25+0.5*glow)+")"; ctx.shadowBlur=12+30*glow;
+    ctx.beginPath();
+    for(var i=0;i<teeth;i++){ var a0=i/teeth*Math.PI*2, a1=(i+0.5)/teeth*Math.PI*2, a2=(i+1)/teeth*Math.PI*2, ro=R, ri=R*0.78;
+      ctx.lineTo(Math.cos(a0)*ro,Math.sin(a0)*ro); ctx.lineTo(Math.cos(a0+0.12)*ro,Math.sin(a0+0.12)*ro);
+      ctx.lineTo(Math.cos(a1)*ri,Math.sin(a1)*ri); ctx.lineTo(Math.cos(a2-0.12)*ri,Math.sin(a2-0.12)*ri); ctx.lineTo(Math.cos(a2)*ro,Math.sin(a2)*ro); }
+    ctx.closePath(); ctx.fillStyle="#1b1610"; ctx.fill();
+    ctx.shadowBlur=0; ctx.lineWidth=1.6; ctx.strokeStyle="rgba(234,180,100,"+(0.6+0.35*glow)+")"; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,R*0.34,0,Math.PI*2); ctx.fillStyle="#0d120f"; ctx.fill(); ctx.strokeStyle="rgba(234,180,100,.5)"; ctx.stroke();
+    ctx.restore();
+    return R*2;
+  }
+  function slideCard(x,y,sc,name,alpha){
+    var w=Math.max(60,W*0.05)*sc, h=w*0.62;
+    ctx.save(); ctx.globalAlpha=alpha==null?1:alpha;
+    ctx.shadowColor="rgba(0,0,0,.5)"; ctx.shadowBlur=10;
+    rr(x-w/2,y-h/2,w,h,5); ctx.fillStyle="#13302a"; ctx.fill(); ctx.shadowBlur=0;
+    ctx.lineWidth=1.2; ctx.strokeStyle=col.gold; rr(x-w/2,y-h/2,w,h,5); ctx.stroke();
+    ctx.fillStyle=col.goldS; ctx.font='700 '+(w*0.13)+'px "Shippori Mincho B1",serif'; ctx.textAlign="center";
+    ctx.fillText(name?name+" 様":"🎉", x, y-h*0.04);
+    ctx.fillStyle=col.ink2; ctx.font='400 '+(w*0.095)+'px "Zen Kaku Gothic New",sans-serif';
+    ctx.fillText("おめでとうございます", x, y+h*0.22);
+    ctx.restore(); return w;
+  }
+
+  function frame(now){
+    if(!running) return;
+    var dt=Math.min(0.05,(now-last)/1000); last=now;
+    gear+=dt*(1.3+pgPulse*5); formT+=dt;
+    dbGlow*=0.92; pgPulse*=0.9; outGlow*=0.92;
+    spawnAcc+=dt; if(spawnAcc>=SPAWN){ spawnAcc-=SPAWN; spawn(); }
+
+    var x0=nodes[0], x3=nodes[3]; pxPerSec=(x3-x0)/5.0; // ~5s traverse
+    var y=baseY();
+
+    // background fade
+    ctx.fillStyle="rgba(13,18,15,0.32)"; ctx.fillRect(0,0,W,H);
+
+    var h=channel();
+    flow(dt,h);
+
+    // update + draw items
+    for(var i=items.length-1;i>=0;i--){ var it=items[i]; it.x+=pxPerSec*dt;
+      if(!it.dDB && it.x>=nodes[1]){ it.dDB=true; counters.in++; dbGlow=1; }
+      if(!it.dPG && it.x>=nodes[2]){ it.dPG=true; pgPulse=1; }
+      if(it.x>=nodes[3]){ counters.out++; outGlow=1; stack.push(it.m); if(stack.length>6)stack.shift(); items.splice(i,1); continue; }
+      // draw
+      var fade=Math.min(1,(it.x-x0)/40);
+      if(it.x<nodes[2]){ // data packet
+        ctx.save(); ctx.globalAlpha=fade;
+        ctx.shadowColor="rgba(234,180,100,.8)"; ctx.shadowBlur=14;
+        ctx.beginPath(); ctx.arc(it.x,y,Math.max(6,W*0.006),0,Math.PI*2); ctx.fillStyle=col.goldS; ctx.fill();
+        ctx.shadowBlur=0; ctx.globalAlpha=fade*0.95;
+        // name tag
+        var tw=ctx.measureText?0:0; ctx.font='700 '+Math.max(10,W*0.0085)+'px "Zen Kaku Gothic New",sans-serif';
+        var t=it.m.name; var pad=7; var twv=ctx.measureText(t).width;
+        rr(it.x-twv/2-pad, y-h*0.5-26, twv+pad*2, 19, 6); ctx.fillStyle="rgba(21,17,11,.85)"; ctx.fill();
+        ctx.fillStyle=col.gold; ctx.textAlign="center"; ctx.fillText(t,it.x,y-h*0.5-12.5);
+        ctx.restore();
+      } else { // transformed into slide card
+        var sc=Math.min(1,(it.x-nodes[2])/60);
+        slideCard(it.x,y,0.6+0.4*sc,it.m.name,fade);
+      }
+    }
+
+    // nodes (drawn over channel)
+    var fh=drawForm(nodes[0],y,Math.max(0, formT<1.2?1: 0)*0.0 + (spawnAcc<0.25?0.6:0));
+    label(nodes[0], y+fh*0.5+30, "会員フォーム入力", "UPSTREAM / 上流", col.gold);
+
+    var dh=drawDB(nodes[1],y,dbGlow);
+    label(nodes[1], y+dh*0.5+26, "データベース", "AUTO IMPORT / 自動取込", col.teal);
+    ctx.textAlign="center"; ctx.font='700 '+Math.max(11,W*0.0092)+'px "JetBrains Mono",monospace'; ctx.fillStyle=col.tealB;
+    ctx.fillText("取込 "+counters.in+" 件", nodes[1], y-dh*0.5-14);
+
+    var gh=drawGear(nodes[2],y,pgPulse);
+    label(nodes[2], y+gh*0.5+30, "プログラム自動生成", "AUTO BUILD / 無人", col.gold);
+
+    // output stack
+    var oy=y, ox=nodes[3];
+    for(var s=0;s<stack.length;s++){ var off=(stack.length-1-s); slideCard(ox+off*3, oy-off*4, 0.9, null, 0.35+0.65*(s/Math.max(1,stack.length-1))); }
+    slideCard(ox,oy,1.0, stack.length?stack[stack.length-1]:null, 1);
+    label(nodes[3], y+ (W*0.05*0.62) +44, "パワポ完成", "DONE / 完成", col.gold);
+    ctx.textAlign="center"; ctx.font='700 '+Math.max(11,W*0.0092)+'px "JetBrains Mono",monospace'; ctx.fillStyle=col.goldS;
+    ctx.fillText("生成 "+counters.out+" 枚", nodes[3], oy- (W*0.05*0.62) -20);
+
+    // arrows between nodes
+    ctx.strokeStyle="rgba(245,237,224,.18)"; ctx.lineWidth=1;
+    requestAnimationFrame(frame);
+  }
+  spawn(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
