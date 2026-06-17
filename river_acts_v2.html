@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>川の三幕 v2 ｜ 編み込み流線 → 整流</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#eab464;--gold-strong:#f3c479;--teal:#79c7bf;--teal-bright:#bdeffa;
+    --ink:#f5ede0;--ink-2:#cabfae;--ink-3:#8a7f6d;
+    --serif:"Shippori Mincho B1",serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#15110c}
+  body{font-family:var(--sans);color:var(--ink)}
+  #c{position:fixed;inset:0;display:block;width:100%;height:100%}
+  .vig{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(135% 115% at 50% 46%,transparent 40%,rgba(10,7,4,.72) 100%)}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:.32;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+  .label{position:fixed;top:24px;left:28px;z-index:5;font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--gold);text-transform:uppercase;opacity:.85}
+  .cap{position:fixed;left:0;right:0;bottom:122px;text-align:center;z-index:5;pointer-events:none;padding:0 24px}
+  .cap .b{font-family:var(--serif);font-weight:700;font-size:clamp(24px,4.1vw,44px);letter-spacing:.04em;text-shadow:0 4px 30px rgba(0,0,0,.82)}
+  .cap .b .g{color:var(--gold-strong)}.cap .b .t{color:var(--teal-bright)}
+  .cap .s{font-size:clamp(13px,1.65vw,15.5px);color:var(--ink-2);margin-top:13px;letter-spacing:.05em;font-weight:400;text-shadow:0 2px 14px rgba(0,0,0,.9)}
+  .cap .s .em{color:var(--gold-strong);font-weight:700}
+  .ctrl{position:fixed;left:0;right:0;bottom:38px;display:flex;flex-direction:column;align-items:center;gap:14px;z-index:6}
+  .steps{display:flex;gap:7px}
+  .stp{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--ink-3);border:1px solid rgba(245,237,224,.09);border-radius:100px;padding:5px 12px;background:rgba(20,16,11,.5);backdrop-filter:blur(4px);transition:.5s}
+  .stp.on{color:#1a1408;background:var(--gold);border-color:var(--gold);font-weight:700}.stp.done{color:var(--gold)}
+  .btn{font-family:var(--sans);font-weight:700;font-size:15.5px;letter-spacing:.05em;color:#1a1408;background:linear-gradient(180deg,var(--gold-strong),var(--gold));border:none;cursor:pointer;padding:13px 30px;border-radius:100px;box-shadow:0 8px 26px rgba(234,180,100,.26),0 2px 0 rgba(255,255,255,.22) inset;transition:transform .25s,box-shadow .3s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(234,180,100,.36)}.btn:disabled{opacity:.5;transform:none}
+  .btn .h{display:block;font-family:var(--mono);font-weight:500;font-size:10px;letter-spacing:.16em;color:rgba(26,20,8,.55);margin-top:3px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="vig"></div><div class="grain"></div>
+<div class="label">川の三幕 v2 ｜ 編み込み流線 → 整流</div>
+<div class="cap"><div class="b" id="capB">少し、煩雑な流れ。</div><div class="s" id="capS">1本の川が編み込み状に蛇行して、あちこちでもたついている。</div></div>
+<div class="ctrl">
+  <div class="steps"><span class="stp on" id="s0">煩雑</span><span class="stp" id="s1">バイパス</span><span class="stp" id="s2">引き</span><span class="stp" id="s3">整流</span></div>
+  <button class="btn" id="btn">▶ うまくバイパスする<span class="h">クリック / Space / →</span></button>
+</div>
+<script>
+(function(){
+  var cv=document.getElementById('c'), ctx=cv.getContext('2d');
+  var W,H,DPR,N,P,time=0;
+  var WW=4200, WH=2360;
+  var bandH=150, braidAmp=95, braidK=0.030, TH=28, S=9, phase=[];
+  for(var s=0;s<S;s++) phase[s]=s*6.2832/S;
+  var focusX=WW*0.5, focusW=440;
+  var act=0, animating=false, focusOrder=0, focusOrderT=0;
+  var st={frontX:-99999};
+  var cam={s:4.0, cx:focusX, cy:0};
+  var tcD=[66,112,108], tcL=[150,205,196], ordTeal=[150,225,215], frontGold=[255,232,170];
+
+  function riverCenter(x){ return WH/2 + Math.sin(x*0.0011+0.4)*WH*0.15 + Math.sin(x*0.0026+1.2)*WH*0.06; }
+  function fitScale(){ return Math.min(W/WW, H/WH)*0.94; }
+  function orderAt(x){
+    var of=focusOrder*Math.max(0, 1-Math.abs(x-focusX)/focusW);
+    var fr=Math.max(0, Math.min(1, (st.frontX - x)/420 + 0.5));
+    return Math.max(of, fr);
+  }
+  function sx(x){ return (x-cam.cx)*cam.s + W/2; }
+  function sy(y){ return (y-cam.cy)*cam.s + H/2; }
+  function mix(a,b,k){ return [a[0]+(b[0]-a[0])*k, a[1]+(b[1]-a[1])*k, a[2]+(b[2]-a[2])*k]; }
+
+  function initP(){ N=Math.min(6000,Math.floor(W*H/220)); P=new Float32Array(N*5);
+    for(var i=0;i<N;i++){ var st2=i%S, x=Math.random()*WW, rk=Math.random()*2-1;
+      var y=riverCenter(x)+braidAmp*Math.sin(x*braidK+phase[st2])+rk*TH;
+      P[i*5]=x; P[i*5+1]=y; P[i*5+2]=x; P[i*5+3]=y; P[i*5+4]=rk; } }
+  function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=innerWidth;H=innerHeight; cv.width=W*DPR;cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); ctx.fillStyle='#15110c';ctx.fillRect(0,0,W,H); cam.cy=riverCenter(focusX); if(!P) initP(); }
+  addEventListener('resize',resize); resize();
+
+  function tweenCam(to,dur,cb){ var f={s:cam.s,cx:cam.cx,cy:cam.cy},t0=null;
+    function fr(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1); var e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+      cam.s=f.s+(to.s-f.s)*e; cam.cx=f.cx+(to.cx-f.cx)*e; cam.cy=f.cy+(to.cy-f.cy)*e;
+      if(p<1)requestAnimationFrame(fr); else if(cb)cb(); } requestAnimationFrame(fr); }
+  function tween(obj,key,to,dur,cb){ var from=obj[key],t0=null;
+    function fr(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1); var e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+      obj[key]=from+(to-from)*e; if(p<1)requestAnimationFrame(fr); else if(cb)cb(); } requestAnimationFrame(fr); }
+
+  function drawCore(x0,x1,alpha,goldSeg){
+    if(alpha<=0.01||x1<=x0) return; if(x0<0)x0=0; if(x1>WW)x1=WW;
+    var steps=Math.max(2,Math.floor((x1-x0)/55)), dx=(x1-x0)/steps, lw=Math.max(0.5,cam.s*0.55), i;
+    ctx.lineWidth=6.5*lw; ctx.strokeStyle='rgba(150,225,215,'+(0.10*alpha).toFixed(3)+')';
+    ctx.beginPath(); for(i=0;i<=steps;i++){ var wx=x0+dx*i; var X=sx(wx),Y=sy(riverCenter(wx)); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);} ctx.stroke();
+    ctx.lineWidth=2.4*lw; ctx.strokeStyle='rgba(205,246,238,'+(0.46*alpha).toFixed(3)+')';
+    ctx.beginPath(); for(i=0;i<=steps;i++){ var wx2=x0+dx*i; var X2=sx(wx2),Y2=sy(riverCenter(wx2)); i?ctx.lineTo(X2,Y2):ctx.moveTo(X2,Y2);} ctx.stroke();
+    if(goldSeg){ var gx0=Math.max(x0,x1-260);
+      ctx.lineWidth=7*lw; ctx.strokeStyle='rgba(243,196,121,0.20)';
+      ctx.beginPath(); var gs=8,gdx=(x1-gx0)/gs; for(i=0;i<=gs;i++){ var gx=gx0+gdx*i; i?ctx.lineTo(sx(gx),sy(riverCenter(gx))):ctx.moveTo(sx(gx),sy(riverCenter(gx)));} ctx.stroke();
+      ctx.lineWidth=3*lw; ctx.strokeStyle='rgba(255,236,190,0.7)';
+      ctx.beginPath(); for(i=0;i<=gs;i++){ var gx2=gx0+gdx*i; i?ctx.lineTo(sx(gx2),sy(riverCenter(gx2))):ctx.moveTo(sx(gx2),sy(riverCenter(gx2)));} ctx.stroke();
+    }
+  }
+
+  function frame(){
+    time+=0.016; focusOrder+=(focusOrderT-focusOrder)*0.03;
+    ctx.globalCompositeOperation='source-over'; ctx.fillStyle='rgba(21,17,12,0.085)'; ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    var lw=Math.max(0.5,Math.min(2.0,cam.s*0.5));
+
+    for(var i=0;i<N;i++){
+      var ix=i*5, x=P[ix], y=P[ix+1], rank=P[ix+4], str=i%S, ph=x*braidK+phase[str];
+      var o=orderAt(x);
+      var off=braidAmp*Math.sin(ph+time*0.12);
+      var tyT=riverCenter(x)+off+rank*TH;
+      var bs=0.5+0.5*Math.sin(ph+1.57);             // 0..1 over/under (weave depth)
+      var vxT=4.0+1.0*Math.sin(x*0.02+str*2.0), vyT=(tyT-y)*0.05;
+      var tyO=riverCenter(x)+rank*TH*0.7, vxO=9.0, vyO=(tyO-y)*0.08;
+      var vx=vxT+(vxO-vxT)*o, vy=vyT+(vyO-vyT)*o;
+      P[ix+2]=x; P[ix+3]=y; x+=vx; y+=vy;
+      if(x>WW+12){ x=-12; y=riverCenter(0)+braidAmp*Math.sin(phase[str])+rank*TH; P[ix+2]=x; P[ix+3]=y; }
+      var rc=riverCenter(x), lim=braidAmp+TH+24; if(y<rc-lim)y=rc-lim; if(y>rc+lim)y=rc+lim;
+      P[ix]=x; P[ix+1]=y;
+      var X=sx(x),Y=sy(y); if(X<-30||X>W+30||Y<-30||Y>H+30) continue;
+      var goldNear=0; if(act===3){ var bd=st.frontX-x; if(bd>0&&bd<520) goldNear=1-bd/520; }
+      var tcol=mix(tcD,tcL,bs);
+      var ocol=mix(ordTeal,frontGold,goldNear);
+      var col=mix(tcol,ocol,o);
+      var alpha=(0.12+bs*0.16)*(1-o)+0.30*o+goldNear*o*0.18+0.06;
+      ctx.lineWidth=((0.6+bs*0.7)*(1-o)+1.05*o)*lw;
+      ctx.strokeStyle='rgba('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+','+alpha.toFixed(3)+')';
+      ctx.beginPath(); ctx.moveTo(sx(P[ix+2]),sy(P[ix+3])); ctx.lineTo(X,Y); ctx.stroke();
+    }
+
+    // bright core ribbon (bypass / ordered trunk) — additive glow
+    if(focusOrder>0.02) drawCore(focusX-focusW*0.85, focusX+focusW*0.85, focusOrder, false);
+    if(act===3 && st.frontX>0) drawCore(0, Math.min(st.frontX,WW), 1, true);
+
+    // crisp overlays
+    ctx.globalCompositeOperation='source-over';
+    if(act===2){
+      var fX=sx(focusX), fY=sy(riverCenter(focusX));
+      ctx.strokeStyle='rgba(150,214,206,0.5)'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(fX,fY,22,0,7); ctx.stroke();
+      ctx.fillStyle='rgba(255,236,190,0.95)'; ctx.beginPath(); ctx.arc(fX,fY,3.4,0,7); ctx.fill();
+      ctx.fillStyle='rgba(202,191,174,0.85)'; ctx.font='12px "JetBrains Mono",monospace'; ctx.textAlign='left';
+      ctx.fillText('整ったのは、ここだけ', fX+28, fY-18);
+    }
+    if(act===3 && st.frontX>0 && st.frontX<WW){
+      var fxs=sx(st.frontX);
+      ctx.strokeStyle='rgba(255,236,190,0.5)'; ctx.lineWidth=2.2;
+      ctx.beginPath(); ctx.moveTo(fxs, sy(riverCenter(st.frontX)-bandH)); ctx.lineTo(fxs, sy(riverCenter(st.frontX)+bandH)); ctx.stroke();
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  var capB=document.getElementById('capB'),capS=document.getElementById('capS'),btn=document.getElementById('btn');
+  var stp=[document.getElementById('s0'),document.getElementById('s1'),document.getElementById('s2'),document.getElementById('s3')];
+  var caps=[
+    {b:'少し、煩雑な流れ。', s:'1本の川が編み込み状に蛇行して、あちこちでもたついている。', btn:'▶ うまくバイパスする'},
+    {b:'バイパスすれば、<span class="t">スムーズ</span>に。', s:'この区間だけ、編み目がほどけて一本の流れに。&nbsp;＝&nbsp;<span class="em">点</span>', btn:'▶ 引いて、全体を見る'},
+    {b:'同じ滞りが、<span class="t">至る所</span>に。', s:'ゆっくりカメラが退くと、直したのは米粒ひとつ。全体はまだぐちゃぐちゃ。', btn:'▶ 上流から整える'},
+    {b:'上流から、<span class="g">整える</span>。', s:'源流から整流フロントが掃引。線に再構築、整うほど一気に流れる。&nbsp;＝&nbsp;<span class="em">線</span>', btn:'↺ もう一度'}
+  ];
+  function paint(i){ capB.innerHTML=caps[i].b; capS.innerHTML=caps[i].s; btn.innerHTML=caps[i].btn+'<span class="h">クリック / Space / →</span>';
+    stp.forEach(function(e,idx){ e.classList.toggle('on',idx===i); e.classList.toggle('done',idx<i); }); }
+
+  function go(){ if(animating) return;
+    if(act===0){ act=1; animating=true; btn.disabled=true; focusOrderT=1; paint(1); setTimeout(function(){ animating=false; btn.disabled=false; },1500); return; }
+    if(act===1){ act=2; animating=true; btn.disabled=true; tweenCam({s:fitScale(),cx:WW/2,cy:WH/2}, 3200, function(){ paint(2); animating=false; btn.disabled=false; }); return; }
+    if(act===2){ act=3; animating=true; btn.disabled=true; st.frontX=-100; tween(st,'frontX', WW+600, 5200, function(){ animating=false; btn.disabled=false; }); paint(3); return; }
+    if(act===3){ act=0; focusOrderT=0; st.frontX=-99999; paint(0); tweenCam({s:4.0,cx:focusX,cy:riverCenter(focusX)}, 1800); }
+  }
+  btn.addEventListener('click',go); cv.addEventListener('click',go);
+  document.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='ArrowRight'||e.key==='Enter'){ e.preventDefault(); go(); } });
+})();
+</script>
+</body>
+</html>

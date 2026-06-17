@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sample C ｜ シェーダーの液体光</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold-strong:#f3c479;--teal-bright:#bdeffa;--ink:#f5ede0;--ink-2:#cabfae;
+    --serif:"Shippori Mincho B1",serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#05080c}
+  body{font-family:var(--sans);color:var(--ink)}
+  #c{position:fixed;inset:0;display:block;width:100%;height:100%}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:.32;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+  .label{position:fixed;top:24px;left:28px;z-index:5;font-family:var(--mono);font-size:11px;letter-spacing:.26em;color:var(--gold-strong);text-transform:uppercase}
+  .cap{position:fixed;left:0;right:0;bottom:54px;text-align:center;z-index:5;pointer-events:none;padding:0 24px}
+  .cap .b{font-family:var(--serif);font-weight:800;font-size:clamp(26px,4.4vw,46px);letter-spacing:.03em;text-shadow:0 4px 30px rgba(0,0,0,.85)}
+  .cap .b .g{color:var(--gold-strong)}.cap .b .t{color:var(--teal-bright)}
+  .cap .s{font-size:clamp(13px,1.7vw,15.5px);color:var(--ink-2);margin-top:12px;letter-spacing:.04em;text-shadow:0 2px 14px rgba(0,0,0,.9)}
+  .err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:8;text-align:center;font-family:var(--mono);font-size:13px;color:var(--ink-2);padding:40px;line-height:2}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="grain"></div>
+<div class="label">Sample C ｜ シェーダーの液体光（GLSL）</div>
+<div class="cap"><div class="b">光る、<span class="t">水</span>。</div><div class="s">GLSLで描く流体表現。金の流れが蛇行する、ムード重視の抽象</div></div>
+<div class="err" id="err">WebGLの初期化に失敗しました。<br>別ブラウザでお試しください。</div>
+<script>
+(function(){
+  var cv=document.getElementById('c');
+  var gl=cv.getContext('webgl')||cv.getContext('experimental-webgl');
+  if(!gl){ document.getElementById('err').style.display='flex'; return; }
+
+  var vs='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  var fs=[
+  'precision highp float;',
+  'uniform vec2 R; uniform float T;',
+  'float hash(vec2 p){p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);return fract(p.x*p.y);}',
+  'float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);',
+  '  float a=hash(i),b=hash(i+vec2(1,0)),c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));',
+  '  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);}',
+  'float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<6;i++){v+=a*noise(p);p=p*2.02+1.7;a*=.5;}return v;}',
+  'void main(){',
+  '  vec2 uv=(gl_FragCoord.xy-0.5*R)/R.y;',
+  '  float t=T*0.12;',
+  '  vec2 q=vec2(fbm(uv*2.6+vec2(0.,t)), fbm(uv*2.6+vec2(5.2,-t)));',
+  '  vec2 r=vec2(fbm(uv*2.6+q*2.2+vec2(t*1.3,1.7)), fbm(uv*2.6+q*2.2+vec2(8.3,-t*1.1)));',
+  '  float f=fbm(uv*2.6+r*2.4);',
+  '  float cy=0.20*sin(uv.x*2.1+0.6)+0.07*sin(uv.x*4.7-t*1.6);',
+  '  float d=abs(uv.y-cy+ (r.y-0.5)*0.10);',
+  '  float channel=smoothstep(0.36,0.0,d);',
+  '  vec3 deep=vec3(0.02,0.05,0.08);',
+  '  vec3 teal=vec3(0.30,0.74,0.72);',
+  '  vec3 gold=vec3(0.96,0.78,0.42);',
+  '  vec3 col=mix(deep,teal,smoothstep(0.15,0.85,f));',
+  '  col=mix(col,gold,channel*smoothstep(0.25,0.95,f));',
+  '  col+=gold*0.30*pow(channel,2.0)*(0.5+0.5*sin(uv.x*22.-T*2.6+r.x*6.));',
+  '  col+=teal*0.10*pow(max(0.,f-0.5),2.0);',
+  '  float vg=1.0-0.55*length(uv*vec2(0.62,1.0));',
+  '  col*=clamp(vg,0.0,1.0);',
+  '  col+=(hash(uv+fract(T))-0.5)*0.025;',
+  '  gl_FragColor=vec4(col,1.0);',
+  '}'].join('\n');
+
+  function sh(type,src){var s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(s));} return s;}
+  var prog=gl.createProgram();
+  gl.attachShader(prog,sh(gl.VERTEX_SHADER,vs));
+  gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(prog);
+  if(!gl.getProgramParameter(prog,gl.LINK_STATUS)){ document.getElementById('err').style.display='flex'; console.error(gl.getProgramInfoLog(prog)); return; }
+  gl.useProgram(prog);
+
+  var buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1, 3,-1, -1,3]),gl.STATIC_DRAW);
+  var loc=gl.getAttribLocation(prog,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  var uR=gl.getUniformLocation(prog,'R'), uT=gl.getUniformLocation(prog,'T');
+
+  function resize(){var dpr=Math.min(devicePixelRatio,2);
+    cv.width=innerWidth*dpr; cv.height=innerHeight*dpr; cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px';
+    gl.viewport(0,0,cv.width,cv.height);}
+  addEventListener('resize',resize); resize();
+
+  var t0=performance.now();
+  function frame(){ gl.uniform2f(uR,cv.width,cv.height); gl.uniform1f(uT,(performance.now()-t0)/1000);
+    gl.drawArrays(gl.TRIANGLES,0,3); requestAnimationFrame(frame); }
+  frame();
+})();
+</script>
+</body>
+</html>

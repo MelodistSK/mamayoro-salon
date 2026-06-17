@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>点の効率化 ｜ 乱れ → 整流</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#eab464;--gold-strong:#f3c479;--teal:#79c7bf;--teal-bright:#bdeffa;
+    --ink:#f5ede0;--ink-2:#cabfae;--ink-3:#8a7f6d;
+    --serif:"Shippori Mincho B1",serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0e1216}
+  body{font-family:var(--sans);color:var(--ink)}
+  #c{position:fixed;inset:0;display:block;width:100%;height:100%}
+  .vig{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(130% 110% at 50% 48%,transparent 50%,rgba(4,7,9,.66) 100%)}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:.26;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+  .label{position:fixed;top:24px;left:28px;z-index:5;font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--gold);text-transform:uppercase;opacity:.82}
+  .cap{position:fixed;left:0;right:0;bottom:120px;text-align:center;z-index:5;pointer-events:none;padding:0 24px}
+  .cap .b{font-family:var(--serif);font-weight:700;font-size:clamp(24px,4.1vw,44px);letter-spacing:.045em;text-shadow:0 4px 30px rgba(0,0,0,.8)}
+  .cap .b .t{color:var(--teal-bright)}
+  .cap .s{font-size:clamp(13px,1.7vw,15.5px);color:var(--ink-2);margin-top:13px;letter-spacing:.05em;font-weight:400;text-shadow:0 2px 14px rgba(0,0,0,.9)}
+  .cap .s .em{color:var(--gold-strong);font-weight:700}
+  .ctrl{position:fixed;left:0;right:0;bottom:40px;display:flex;justify-content:center;z-index:6}
+  .btn{font-family:var(--sans);font-weight:700;font-size:15.5px;letter-spacing:.05em;color:#10201f;background:linear-gradient(180deg,#bff0ea,#88cfc6);border:none;cursor:pointer;padding:13px 32px;border-radius:100px;box-shadow:0 8px 26px rgba(121,199,191,.26),0 2px 0 rgba(255,255,255,.3) inset;transition:transform .25s,box-shadow .3s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(121,199,191,.36)}
+  .btn .h{display:block;font-family:var(--mono);font-weight:500;font-size:10px;letter-spacing:.16em;color:rgba(16,32,31,.55);margin-top:3px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="vig"></div><div class="grain"></div>
+<div class="label">点の効率化 ｜ 乱れ → 整流</div>
+<div class="cap"><div class="b" id="capB">ぐちゃぐちゃに、進んでいる。</div><div class="s" id="capS">流れはある。でも、もたついて、絡まっている。</div></div>
+<div class="ctrl"><button class="btn" id="btn">▶ 整える<span class="h">クリック / Space</span></button></div>
+<script>
+(function(){
+  var cv=document.getElementById('c'), ctx=cv.getContext('2d');
+  var W,H,DPR,time=0, m=0, mT=0;
+  var LINES=6, ph1=[], ph2=[], ph3=[];
+  for(var i=0;i<LINES;i++){ ph1[i]=Math.random()*6.28; ph2[i]=Math.random()*6.28; ph3[i]=Math.random()*6.28; }
+
+  function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=innerWidth;H=innerHeight; cv.width=W*DPR;cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+  addEventListener('resize',resize); resize();
+
+  function mix(a,b,k){ return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]; }
+  var dull=[96,150,150], clean=[150,214,202];
+
+  function lineY(i, x, mm, t, spacing, topY){
+    var by=topY + i*spacing;
+    var calm = by + spacing*0.14*Math.sin(x*0.0036 + t*0.5 + i*0.7);
+    var mess = by + spacing*0.72*Math.sin(x*0.0110 + ph1[i] + t*0.32)
+                  + spacing*0.40*Math.sin(x*0.0230 + ph2[i] - t*0.24)
+                  + spacing*0.18*Math.sin(x*0.0450 + ph3[i] + t*0.5);
+    return mess + (calm - mess)*mm;
+  }
+
+  function frame(){
+    time+=0.016; m += (mT-m)*0.02;
+    var mm = m<0.5 ? 4*m*m*m : 1-Math.pow(-2*m+2,3)/2;
+    // clean clear (no smear -> crisp ribbons)
+    ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle='#0e1216'; ctx.fillRect(0,0,W,H);
+
+    var topY=H*0.24, spacing=(H*0.52)/(LINES-1);
+    var steps=Math.max(40, Math.floor(W/26)), dx=(W+40)/steps;
+    var col=mix(dull,clean,mm), cs='rgb('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+')';
+    var speed=mm*1.9 + 0.7; // flows a bit faster once tidy
+
+    for(var i=0;i<LINES;i++){
+      // soft glow + core
+      ctx.beginPath();
+      for(var s=0;s<=steps;s++){ var x=-20+dx*s, y=lineY(i,x,mm,time,spacing,topY); s?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.shadowBlur=16; ctx.shadowColor='rgba(121,199,191,0.55)';
+      ctx.strokeStyle='rgba('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+',0.85)'; ctx.lineWidth=2.4; ctx.stroke();
+      ctx.shadowBlur=0;
+      // flowing light along the line
+      ctx.setLineDash([2, 30]); ctx.lineDashOffset = -(time*60*speed + i*40);
+      ctx.strokeStyle='rgba(200,244,238,'+(0.45+mm*0.25).toFixed(2)+')'; ctx.lineWidth=2.6; ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  var capB=document.getElementById('capB'),capS=document.getElementById('capS'),btn=document.getElementById('btn');
+  function setMode(tidy){
+    mT = tidy?1:0;
+    if(tidy){ capB.innerHTML='整えると、<span class="t">すっと流れる</span>。'; capS.innerHTML='同じ流れが、綺麗になった。&nbsp;＝&nbsp;<span class="em">点の効率化</span>'; btn.innerHTML='↺ 戻す<span class="h">クリック / Space</span>'; }
+    else{ capB.innerHTML='ぐちゃぐちゃに、進んでいる。'; capS.innerHTML='流れはある。でも、もたついて、絡まっている。'; btn.innerHTML='▶ 整える<span class="h">クリック / Space</span>'; }
+  }
+  btn.addEventListener('click',function(){ setMode(mT<0.5); });
+  document.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='ArrowRight'){ e.preventDefault(); setMode(mT<0.5); } });
+  cv.addEventListener('click',function(){ setMode(mT<0.5); });
+  setTimeout(function(){ setMode(true); }, 2800);
+  setInterval(function(){ setMode(mT<0.5); }, 9000);
+})();
+</script>
+</body>
+</html>

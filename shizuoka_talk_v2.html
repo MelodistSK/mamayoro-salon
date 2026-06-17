@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>点で止めない。線にする。｜ 静岡ママヨロサロン（通し v2）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#eab464;--gold-strong:#f3c479;--teal:#79c7bf;--teal-bright:#bdeffa;--coral:#e2906f;
+    --ink:#f5ede0;--ink-2:#cabfae;--ink-3:#8a7f6d;
+    --serif:"Shippori Mincho B1",serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-snap-type:y mandatory}
+  body{background:#12100b;color:var(--ink);font-family:var(--sans);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+    background-image:radial-gradient(120% 90% at 12% -5%,rgba(234,180,100,.08),transparent 55%),radial-gradient(90% 70% at 100% 0%,rgba(121,199,191,.05),transparent 50%);
+    background-attachment:fixed;}
+  section{scroll-snap-align:start;scroll-snap-stop:always}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:80;opacity:.26;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+
+  .panel{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:72px 26px;position:relative;z-index:2}
+  .kick{font-family:var(--mono);font-size:11.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);margin-bottom:26px;display:flex;align-items:center;gap:13px}
+  .kick::before,.kick::after{content:"";width:24px;height:1px;background:linear-gradient(90deg,transparent,rgba(234,180,100,.5),transparent)}
+  .big{font-family:var(--serif);font-weight:700;line-height:1.34;font-size:clamp(27px,4.7vw,50px);letter-spacing:.03em}
+  .big .g{color:var(--gold-strong)} .big .t{color:var(--teal-bright)}
+  .lead{font-size:clamp(14px,1.95vw,17px);color:var(--ink-2);max-width:30em;margin-top:28px;line-height:2}
+  .lead b{color:var(--ink);font-weight:700} .lead .g{color:var(--gold-strong);font-weight:700} .lead .t{color:var(--teal-bright);font-weight:700}
+  .tail{margin-top:22px;font-size:clamp(13.5px,1.7vw,16px);color:var(--ink-3)}
+  .tail .g{color:var(--gold-strong);font-weight:700}
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.7,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  .cue{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:8px}
+  .cue .ch{width:10px;height:10px;border-right:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);transform:rotate(45deg);animation:bob 1.8s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0);opacity:.4}50%{transform:rotate(45deg) translate(3px,3px);opacity:1}}
+
+  /* ---- river stage ---- */
+  #riverStage{position:relative;height:100vh;overflow:hidden;z-index:2;background:linear-gradient(180deg,#0e1418,#0c0f0c 60%,#100d09)}
+  #rc{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #riverStage .rlabel{position:absolute;top:22px;left:26px;z-index:4;font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;opacity:.7}
+  #riverStage .rcap{position:absolute;left:0;right:0;bottom:168px;text-align:center;z-index:4;pointer-events:none;padding:0 24px}
+  #riverStage .rcap .b{font-family:var(--serif);font-weight:700;font-size:clamp(23px,3.9vw,42px);letter-spacing:.04em;text-shadow:0 4px 30px rgba(0,0,0,.85)}
+  #riverStage .rcap .b .t{color:var(--teal-bright)} #riverStage .rcap .b .g{color:var(--gold-strong)}
+  #riverStage .rcap .s{font-size:clamp(12.5px,1.6vw,15px);color:var(--ink-2);margin-top:12px;text-shadow:0 2px 14px rgba(0,0,0,.92)}
+  #riverStage .rcap .s .em{color:var(--gold-strong);font-weight:700}
+  #riverStage .rctrl{position:absolute;left:0;right:0;bottom:36px;display:flex;flex-direction:column;align-items:center;gap:13px;z-index:5}
+  #riverStage .rsteps{display:flex;gap:7px}
+  #riverStage .rstp{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--ink-3);border:1px solid rgba(245,237,224,.09);border-radius:100px;padding:5px 12px;background:rgba(18,15,11,.5);backdrop-filter:blur(4px);transition:.5s}
+  #riverStage .rstp.on{color:#1a1408;background:var(--gold);border-color:var(--gold);font-weight:700} #riverStage .rstp.done{color:var(--gold)}
+  #riverStage .rbtn{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.05em;color:#1a1408;background:linear-gradient(180deg,var(--gold-strong),var(--gold));border:none;cursor:pointer;padding:12px 28px;border-radius:100px;box-shadow:0 8px 26px rgba(234,180,100,.26),0 2px 0 rgba(255,255,255,.22) inset;transition:transform .25s,box-shadow .3s}
+  #riverStage .rbtn:hover{transform:translateY(-2px)} #riverStage .rbtn:disabled{opacity:.5;transform:none}
+  #riverStage .rbtn .h{display:block;font-family:var(--mono);font-weight:500;font-size:9.5px;letter-spacing:.14em;color:rgba(26,20,8,.55);margin-top:3px}
+
+  /* ---- CTA ---- */
+  .qr{margin-top:34px;display:flex;flex-direction:column;align-items:center;gap:12px}
+  .qrbox{width:150px;height:150px;border:1.5px dashed rgba(234,180,100,.5);border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--ink-3);padding:14px;background:rgba(234,180,100,.05)}
+  .ctabtn{font-family:var(--sans);font-weight:700;font-size:16px;color:#1a1408;background:linear-gradient(180deg,var(--gold-strong),var(--gold));border:none;border-radius:100px;padding:14px 38px;box-shadow:0 10px 30px rgba(234,180,100,.3);cursor:pointer}
+  .close{margin-top:46px;font-family:var(--serif);font-weight:700;font-size:clamp(18px,2.4vw,26px);color:var(--ink)}
+  .close .t{color:var(--teal-bright)}
+  .credit{margin-top:40px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--ink-3)}
+
+  /* ---- deck UI ---- */
+  .deck-nav{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:70;display:flex;flex-direction:column;gap:11px}
+  .deck-nav .d{width:8px;height:8px;border-radius:50%;background:rgba(245,237,224,.18);transition:transform .3s,background .3s;cursor:pointer}
+  .deck-nav .d.on{background:var(--gold);transform:scale(1.4)}
+  .deck-hint{position:fixed;bottom:18px;right:22px;z-index:70;font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ink-3);opacity:.8;transition:opacity .6s;pointer-events:none}
+  .deck-hint.hide{opacity:0}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="deck-nav" id="deckNav"></div>
+<div class="deck-hint" id="deckHint">→ / Space で進む</div>
+
+<!-- 1. INTRO -->
+<section class="panel" id="s-intro">
+  <div class="kick reveal">「入れたのに、変わらない」</div>
+  <h2 class="big reveal" style="transition-delay:.08s">AIは、もう<span class="t">使える</span>。<br>でも、組織は、変わらない。</h2>
+  <p class="lead reveal" style="transition-delay:.2s">個人が速くなっても、全体のインパクトは小さい。<br>ムダは作業の“中”じゃなく、工程の<b>“あいだ”</b>に溜まっているから。</p>
+  <div class="cue"><span>その“あいだ”を、川で</span><span class="ch"></span></div>
+</section>
+
+<!-- 2. RIVER STAGE -->
+<section id="riverStage" data-act="0">
+  <canvas id="rc"></canvas>
+  <div class="rlabel">点 → 引き → 線</div>
+  <div class="rcap"><div class="b" id="rCapB">石で、うまく流れていない。</div><div class="s" id="rCapS">上流から来た水が、ここで詰まっている。</div></div>
+  <div class="rctrl">
+    <div class="rsteps"><span class="rstp on" id="rS0">点</span><span class="rstp" id="rS1">引き</span><span class="rstp" id="rS2">線</span></div>
+    <button class="rbtn" id="rBtn">▶ 石をどける<span class="h">クリック / → キー</span></button>
+  </div>
+</section>
+
+<!-- 3. 種明かし -->
+<section class="panel" id="s-reveal">
+  <div class="kick reveal">さっきの“護岸工事”の、正体</div>
+  <h2 class="big reveal" style="transition-delay:.08s">AIに、毎回やらせない。<br><span class="t">フローを、仕組みにする</span>。</h2>
+  <p class="lead reveal" style="transition-delay:.2s">AIは毎回その場で考える。便利だけど、不安定で、コストもかかる。<br>正解は、AIに<b>フローを解析させ、プログラムを書かせて</b>、その仕組みで動かすこと。<br>同じ入力なら、同じ答え。正確・速い・安い。</p>
+  <p class="tail reveal" style="transition-delay:.32s">そして、その仕組みの土台が——<span class="g">データベース</span>。</p>
+</section>
+
+<!-- 4. 僕たちの世界 -->
+<section class="panel" id="s-three">
+  <div class="kick reveal">やることは、3つ</div>
+  <h2 class="big reveal" style="transition-delay:.08s">①整える ②書かせる ③動かす。</h2>
+  <p class="lead reveal" style="transition-delay:.2s">シンプル。でも、それぞれに、けっこうな知識と泥臭い作業が要ります。<br>だからここから先は、正直、<b>僕たちの仕事</b>です。</p>
+  <p class="tail reveal" style="transition-delay:.32s">道は2つ。<b style="color:var(--ink)">学ぶ</b>か、<b style="color:var(--ink)">任せる</b>か。どちらも正解。</p>
+</section>
+
+<!-- 5. CTA -->
+<section class="panel" id="s-cta">
+  <div class="kick reveal">ただ、ひとつだけ</div>
+  <h2 class="big reveal" style="transition-delay:.08s">どこを整えると効くかは、<br><span class="g">会社ごとに、ちがう</span>。</h2>
+  <p class="lead reveal" style="transition-delay:.2s">あなたの会社の“効く一カ所”は、別問題。<br>無料相談で、そこを一緒に見つけます。構築でも、学習でも。</p>
+  <div class="qr reveal" style="transition-delay:.32s">
+    <div class="qrbox">QR / 申込フォーム<br>（後で差し替え）</div>
+    <button class="ctabtn" onclick="(typeof sendPrompt==='function')&&sendPrompt('無料相談を申し込みたい')">無料相談へ</button>
+  </div>
+  <div class="close reveal" style="transition-delay:.44s">点で、止めない。<span class="t">線</span>に、しよう。</div>
+  <div class="credit reveal" style="transition-delay:.56s">静岡ママヨロサロン ｜ 点で止めない。線にする。（通し v2）</div>
+</section>
+
+<script>
+/* ===== reveal-on-scroll ===== */
+(function(){
+  var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('in'); }); },{threshold:.22});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+})();
+
+/* ===== river stage (点→引き→線) ===== */
+(function(){
+  var stage=document.getElementById('riverStage'), cv=document.getElementById('rc'), ctx=cv.getContext('2d');
+  var W,H,DPR,N,P,time=0;
+  var WW=4200, WH=2360;
+  var act=0, animating=false, eng=0, engT=0;
+  var cam={s:1, cx:WW*0.5, cy:WH*0.5};
+  var teal=[150,214,202], dull=[78,124,124], coral=[226,144,111], gold=[243,196,121];
+  var tones=[[126,128,130],[112,104,94],[96,101,112],[138,130,118],[88,92,98],[120,112,101]];
+
+  function meander(x){ return Math.sin(x*0.0013+0.5)*WH*0.15 + Math.sin(x*0.0029+1.2)*WH*0.055 + Math.sin(x*0.0051+2.3)*WH*0.032 + Math.sin(x*0.0085+0.7)*WH*0.018; }
+  function riverCenter(x){ return WH/2 + meander(x)*(1-eng); }
+  function halfW(){ return WH*(0.105 - eng*0.012); }
+
+  var spots=[], spotXs=[0.10,0.235,0.37,0.5,0.635,0.77,0.9], FOCUS=3;
+  function buildSpots(){ spots=[];
+    for(var k=0;k<spotXs.length;k++){ var sxw=WW*spotXs[k], rocks=[], n=7;
+      for(var r=0;r<n;r++){ rocks.push({ dx:(Math.random()*2-1)*150, dy:(Math.random()*2-1)*WH*0.075,
+        side:(r%2?1:-1), along:(Math.floor(r/2)-1.5)*78+(Math.random()*2-1)*16, r:26+Math.random()*30,
+        rot:Math.random()*6.28, tone:tones[(Math.random()*tones.length)|0], _x:0,_y:0,_s:1 }); }
+      spots.push({x:sxw, placed:0, placedT:0, rocks:rocks});
+    }
+  }
+  buildSpots();
+
+  function fit(){ return Math.min(W/WW, H/WH)*0.94; }
+  function zoomScale(){ return H/(halfW()*2.5); }
+  function initP(){ N=Math.min(7200,Math.floor(W*H/180)); P=new Float32Array(N*4);
+    for(var i=0;i<N;i++){ var x=Math.random()*WW, rk=Math.random()*2-1; P[i*4]=x; P[i*4+1]=riverCenter(x)+rk*halfW()*0.9; P[i*4+2]=rk; P[i*4+3]=0; } }
+  function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=cv.clientWidth||window.innerWidth; H=cv.clientHeight||window.innerHeight; cv.width=W*DPR;cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); if(!P) initP();
+    cam.s=(act<2?zoomScale():fit()); cam.cx=(act<2?spots[FOCUS].x:WW/2); cam.cy=(act<2?riverCenter(spots[FOCUS].x):WH/2); }
+  addEventListener('resize',resize); resize(); cam.s=zoomScale(); cam.cx=spots[FOCUS].x; cam.cy=riverCenter(spots[FOCUS].x);
+
+  function sx(x){ return (x-cam.cx)*cam.s + W/2; }
+  function sy(y){ return (y-cam.cy)*cam.s + H/2; }
+  function Lp(a,b,k){ return a+(b-a)*k; }
+  function mix(a,b,k){ return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]; }
+
+  function tweenCam(to,dur,cb){ var f={s:cam.s,cx:cam.cx,cy:cam.cy},t0=null;
+    function fr(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1); var e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+      cam.s=f.s+(to.s-f.s)*e; cam.cx=f.cx+(to.cx-f.cx)*e; cam.cy=f.cy+(to.cy-f.cy)*e;
+      if(p<1)requestAnimationFrame(fr); else if(cb)cb(); } requestAnimationFrame(fr); }
+
+  function updateRocks(){ var hw=halfW();
+    for(var k=0;k<spots.length;k++){ var sp=spots[k]; sp.placed+=(sp.placedT-sp.placed)*0.045;
+      for(var r=0;r<sp.rocks.length;r++){ var ro=sp.rocks[r];
+        var mx=sp.x+ro.dx, my=riverCenter(sp.x)+ro.dy, ax=sp.x+ro.along, ty=riverCenter(ax)+ro.side*(hw+ro.r*0.45);
+        ro._x=Lp(mx,ax,sp.placed); ro._y=Lp(my,ty,sp.placed); ro._s=1-sp.placed; }
+    }
+  }
+  function drawBanks(){
+    var gT=ctx.createLinearGradient(0,0,0,H); gT.addColorStop(0,'#241a11'); gT.addColorStop(.5,'#2b2015'); gT.addColorStop(1,'#22190f');
+    var xL=cam.cx-(W/2+90)/cam.s, xR=cam.cx+(W/2+90)/cam.s; if(xL<0)xL=0; if(xR>WW)xR=WW; var steps=70,dx=(xR-xL)/steps,i,wx,hw=halfW();
+    ctx.beginPath(); ctx.moveTo(W+60,-60); ctx.lineTo(-60,-60);
+    for(i=0;i<=steps;i++){ wx=xL+dx*i; ctx.lineTo(sx(wx), sy(riverCenter(wx)-hw)); } ctx.closePath(); ctx.fillStyle=gT; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(W+60,H+60); ctx.lineTo(-60,H+60);
+    for(i=0;i<=steps;i++){ wx=xL+dx*i; ctx.lineTo(sx(wx), sy(riverCenter(wx)+hw)); } ctx.closePath(); ctx.fillStyle=gT; ctx.fill();
+    var kk; for(kk=-1;kk<=1;kk+=2){ ctx.lineWidth=2+eng*2.4; ctx.strokeStyle='rgba(245,206,150,'+(0.16+eng*0.4).toFixed(2)+')';
+      ctx.beginPath(); for(i=0;i<=steps;i++){ wx=xL+dx*i; var Y=sy(riverCenter(wx)+kk*hw); i?ctx.lineTo(sx(wx),Y):ctx.moveTo(sx(wx),Y);} ctx.stroke(); }
+  }
+  function drawRock(X,Y,rad,rot,tone){ if(rad<1.2) return;
+    ctx.save(); ctx.globalAlpha=0.30; ctx.fillStyle='#05080a';
+    ctx.beginPath(); ctx.ellipse(X+rad*0.2,Y+rad*0.42,rad*1.02,rad*0.5,0,0,6.2832); ctx.fill(); ctx.globalAlpha=1;
+    var lr=tone[0],lg=tone[1],lb=tone[2];
+    var light='rgb('+Math.min(255,lr*1.55|0)+','+Math.min(255,lg*1.55|0)+','+Math.min(255,lb*1.55|0)+')';
+    var dark='rgb('+(lr*0.42|0)+','+(lg*0.42|0)+','+(lb*0.42|0)+')';
+    var g=ctx.createRadialGradient(X-rad*0.4,Y-rad*0.45,rad*0.08, X,Y,rad*1.25);
+    g.addColorStop(0,light); g.addColorStop(0.5,'rgb('+lr+','+lg+','+lb+')'); g.addColorStop(1,dark);
+    ctx.translate(X,Y); ctx.rotate(rot); ctx.fillStyle=g; ctx.beginPath();
+    for(var a=0;a<12;a++){ var ang=a/12*6.2832, rr=rad*(0.82+0.18*Math.sin(a*1.7+rot*3)+0.05*Math.sin(a*4.1)); var pxx=Math.cos(ang)*rr, pyy=Math.sin(ang)*rr*0.8; a?ctx.lineTo(pxx,pyy):ctx.moveTo(pxx,pyy); }
+    ctx.closePath(); ctx.fill();
+    ctx.lineWidth=Math.max(0.5,rad*0.05); ctx.strokeStyle='rgba(10,12,16,0.35)'; ctx.stroke();
+    var hg=ctx.createRadialGradient(-rad*0.34,-rad*0.4,0,-rad*0.34,-rad*0.4,rad*0.72);
+    hg.addColorStop(0,'rgba(255,255,255,0.45)'); hg.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=hg;
+    ctx.beginPath(); ctx.ellipse(-rad*0.3,-rad*0.36,rad*0.5,rad*0.32,0.3,0,6.2832); ctx.fill(); ctx.restore();
+  }
+  function drawRocks(){ for(var k=0;k<spots.length;k++){ var sp=spots[k]; if(Math.abs(sp.x-cam.cx)>(W/2+320)/cam.s) continue;
+    for(var r=0;r<sp.rocks.length;r++){ var ro=sp.rocks[r], X=sx(ro._x), Y=sy(ro._y), rad=ro.r*cam.s; if(X<-50||X>W+50||Y<-50||Y>H+50) continue; drawRock(X,Y,rad,ro.rot,ro.tone); } } }
+
+  function frame(){
+    time+=0.016; eng+=(engT-eng)*0.02; updateRocks();
+    ctx.globalCompositeOperation='source-over'; ctx.fillStyle='rgba(8,15,16,0.11)'; ctx.fillRect(0,0,W,H);
+    drawBanks(); ctx.globalCompositeOperation='lighter';
+    var hw=halfW(), vxBase=6.0+eng*5.0, lw=Math.max(0.5,Math.min(1.8,cam.s*0.5));
+    for(var i=0;i<N;i++){
+      var ix=i*4, x=P[ix], y=P[ix+1], rank=P[ix+2];
+      var rc=riverCenter(x), braid=Math.sin(x*0.0042+rank*3.1)*hw*0.5*(1-eng);
+      var ty=rc+rank*hw*(0.7-eng*0.16)+braid;
+      var vx=vxBase, vy=(ty-y)*0.06+Math.sin(x*0.02+y*0.02+time)*0.5*(1-eng), blocked=0;
+      for(var k2=0;k2<spots.length;k2++){ var sp=spots[k2]; if(sp.placed>0.93) continue; if(Math.abs(x-sp.x)>300) continue;
+        for(var r2=0;r2<sp.rocks.length;r2++){ var ro=sp.rocks[r2]; if(ro._s<0.05) continue;
+          var dxr=x-ro._x, dyr=y-ro._y, d=Math.sqrt(dxr*dxr+dyr*dyr)+0.01, R=ro.r*1.7;
+          if(d<R){ var pf=(1-d/R)*ro._s; vx+=(dxr/d)*2.4*pf; vy+=(dyr/d)*2.6*pf; vx*=(1-0.62*pf); if(pf>blocked)blocked=pf; } } }
+      var spd=vx, px=x, py=y; x+=vx; y+=vy;
+      if(x>WW+10){ x=-10; y=riverCenter(0)+rank*hw*0.9; px=x; py=y; }
+      var rc2=riverCenter(x), lim=hw*1.25; if(y<rc2-lim)y=rc2-lim; if(y>rc2+lim)y=rc2+lim;
+      P[ix]=x; P[ix+1]=y;
+      var X=sx(x),Y=sy(y); if(X<-30||X>W+30||Y<-30||Y>H+30) continue;
+      var q=Math.min(1,spd/9), col=mix(dull,teal,q);
+      if(blocked>0.18) col=mix(col,coral,Math.min(0.7,blocked*0.8));
+      if(eng>0.02) col=mix(col,gold,eng*0.16);
+      var alpha=0.09+q*0.17+blocked*0.05+0.05;
+      ctx.lineWidth=lw; ctx.strokeStyle='rgba('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+','+alpha.toFixed(3)+')';
+      ctx.beginPath(); ctx.moveTo(sx(px),sy(py)); ctx.lineTo(X,Y); ctx.stroke();
+    }
+    ctx.globalCompositeOperation='source-over'; drawRocks();
+    if(act===2){
+      for(var m=0;m<spots.length;m++){ var sp2=spots[m]; if(sp2.placed<0.55) continue; var X2=sx(sp2.x), Y2=sy(riverCenter(sp2.x)); if(X2<10||X2>W-10) continue;
+        ctx.strokeStyle='rgba(243,196,121,'+(0.5+0.3*Math.sin(time*2+m)).toFixed(2)+')'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.arc(X2,Y2,12,0,6.2832); ctx.stroke();
+        ctx.strokeStyle='rgba(243,196,121,0.95)'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(X2-4.5,Y2+0.5); ctx.lineTo(X2-1,Y2+4); ctx.lineTo(X2+5,Y2-4); ctx.stroke(); ctx.lineCap='butt';
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  var capB=document.getElementById('rCapB'),capS=document.getElementById('rCapS'),btn=document.getElementById('rBtn');
+  var stp=[document.getElementById('rS0'),document.getElementById('rS1'),document.getElementById('rS2')];
+  var caps=[
+    {b:'石で、うまく流れていない。', s:'上流から来た水が、ここで詰まっている。', btn:'▶ 石をどける', step:0},
+    {b:'石を寄せると、<span class="t">流れる</span>。', s:'どけた石は、岸へ。ここはスムーズに。&nbsp;＝&nbsp;<span class="em">点</span>', btn:'▶ 引いて、全体を見る', step:0},
+    {b:'点の効率化は、<span class="t">あちこちで</span>。', s:'どの石も、どけてきた。— でも、川はまだ、曲がりくねってバラバラ。', btn:'▶ 護岸工事をする', step:1},
+    {b:'護岸で、川ごと<span class="g">一本の線に</span>。', s:'バラバラの流れが、まっすぐ一直線へ。&nbsp;＝&nbsp;<span class="em">線</span>', btn:'↺ もう一度', step:2}
+  ];
+  function paint(i){ capB.innerHTML=caps[i].b; capS.innerHTML=caps[i].s; btn.innerHTML=caps[i].btn+'<span class="h">クリック / → キー</span>';
+    stp.forEach(function(e,idx){ e.classList.toggle('on',idx===caps[i].step); e.classList.toggle('done',idx<caps[i].step); });
+    stage.setAttribute('data-act', i); }
+  function go(){ if(animating) return;
+    if(act===0){ act=1; animating=true; btn.disabled=true; spots[FOCUS].placedT=1; paint(1); setTimeout(function(){animating=false;btn.disabled=false;},1700); return; }
+    if(act===1){ act=2; animating=true; btn.disabled=true; paint(2);
+      var ord=[]; for(var oi=0;oi<spots.length;oi++) if(oi!==FOCUS) ord.push(oi);
+      ord.sort(function(a,b){ return spots[a].x-spots[b].x; });
+      ord.forEach(function(idx,i){ setTimeout(function(){ spots[idx].placedT=1; }, 350+i*200); });
+      tweenCam({s:fit(),cx:WW/2,cy:WH/2},3200,function(){animating=false;btn.disabled=false;}); return; }
+    if(act===2){ act=3; animating=true; btn.disabled=true; engT=1; for(var k=0;k<spots.length;k++) spots[k].placedT=1; paint(3); setTimeout(function(){animating=false;btn.disabled=false;},2600); return; }
+    if(act===3){ act=0; engT=0; for(var k2=0;k2<spots.length;k2++) spots[k2].placedT=0; paint(0); tweenCam({s:zoomScale(),cx:spots[FOCUS].x,cy:riverCenter(spots[FOCUS].x)},1800); }
+  }
+  btn.addEventListener('click',function(e){ e.stopPropagation(); go(); });
+  cv.addEventListener('click',go);
+  /* expose to deck controller: river consumes forward-presses until 線, then deck advances */
+  window.river={ go:go, done:function(){ return act>=3; }, animating:function(){ return animating; } };
+})();
+
+/* ===== deck controller: 1画面ずつ送る + 川ブリッジ ===== */
+(function(){
+  var secs=Array.prototype.slice.call(document.querySelectorAll('section'));
+  var nav=document.getElementById('deckNav'), hint=document.getElementById('deckHint'), cur=0;
+  secs.forEach(function(s,i){ var d=document.createElement('div'); d.className='d'+(i===0?' on':''); d.title=(i+1)+' / '+secs.length; d.addEventListener('click',function(){ go(i); }); nav.appendChild(d); });
+  var dots=Array.prototype.slice.call(nav.children);
+  function setCur(i){ cur=i; dots.forEach(function(d,k){ d.classList.toggle('on',k===i); }); }
+  function go(i){ i=Math.max(0,Math.min(secs.length-1,i)); secs[i].scrollIntoView({behavior:'smooth'}); setCur(i); }
+  function next(){ if(hint) hint.classList.add('hide');
+    var s=secs[cur];
+    if(s.id==='riverStage' && window.river){ if(window.river.animating()) return; if(!window.river.done()){ window.river.go(); return; } }
+    go(cur+1);
+  }
+  function prev(){ go(cur-1); }
+  document.addEventListener('keydown',function(e){
+    if(e.metaKey||e.ctrlKey||e.altKey) return;
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '||e.key==='Spacebar'||e.key==='ArrowDown'){ e.preventDefault(); next(); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp'){ e.preventDefault(); prev(); }
+  });
+  var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting && e.intersectionRatio>0.55){ var i=secs.indexOf(e.target); if(i>=0) setCur(i); } }); },{threshold:[0,0.55,1]});
+  secs.forEach(function(s){ io.observe(s); });
+})();
+</script>
+</body>
+</html>

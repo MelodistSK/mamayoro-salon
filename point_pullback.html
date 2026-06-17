@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>点 → 引き ｜ 整えた6本が、全体ではほんの一部</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#eab464;--gold-strong:#f3c479;--teal:#79c7bf;--teal-bright:#bdeffa;
+    --ink:#f5ede0;--ink-2:#cabfae;--ink-3:#8a7f6d;
+    --serif:"Shippori Mincho B1",serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0e1216}
+  body{font-family:var(--sans);color:var(--ink)}
+  #c{position:fixed;inset:0;display:block;width:100%;height:100%}
+  .vig{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(130% 110% at 50% 48%,transparent 50%,rgba(4,7,9,.66) 100%)}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:.26;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+  .label{position:fixed;top:24px;left:28px;z-index:5;font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--gold);text-transform:uppercase;opacity:.82}
+  .cap{position:fixed;left:0;right:0;bottom:120px;text-align:center;z-index:5;pointer-events:none;padding:0 24px}
+  .cap .b{font-family:var(--serif);font-weight:700;font-size:clamp(24px,4.1vw,44px);letter-spacing:.045em;text-shadow:0 4px 30px rgba(0,0,0,.82)}
+  .cap .b .t{color:var(--teal-bright)}.cap .b .g{color:var(--gold-strong)}
+  .cap .s{font-size:clamp(13px,1.7vw,15.5px);color:var(--ink-2);margin-top:13px;letter-spacing:.05em;font-weight:400;text-shadow:0 2px 14px rgba(0,0,0,.9)}
+  .cap .s .em{color:var(--gold-strong);font-weight:700}
+  .ctrl{position:fixed;left:0;right:0;bottom:38px;display:flex;flex-direction:column;align-items:center;gap:14px;z-index:6}
+  .steps{display:flex;gap:7px}
+  .stp{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--ink-3);border:1px solid rgba(245,237,224,.09);border-radius:100px;padding:5px 12px;background:rgba(16,20,22,.5);backdrop-filter:blur(4px);transition:.5s}
+  .stp.on{color:#10201f;background:var(--teal);border-color:var(--teal);font-weight:700}.stp.done{color:var(--teal)}
+  .btn{font-family:var(--sans);font-weight:700;font-size:15.5px;letter-spacing:.05em;color:#10201f;background:linear-gradient(180deg,#bff0ea,#88cfc6);border:none;cursor:pointer;padding:13px 30px;border-radius:100px;box-shadow:0 8px 26px rgba(121,199,191,.26),0 2px 0 rgba(255,255,255,.3) inset;transition:transform .25s,box-shadow .3s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(121,199,191,.36)}.btn:disabled{opacity:.5;transform:none}
+  .btn .h{display:block;font-family:var(--mono);font-weight:500;font-size:10px;letter-spacing:.16em;color:rgba(16,32,31,.55);margin-top:3px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="vig"></div><div class="grain"></div>
+<div class="label">点 → 引き</div>
+<div class="cap"><div class="b" id="capB">ぐちゃぐちゃに、進んでいる。</div><div class="s" id="capS">まずは、この6本。もたついて絡んでいる。</div></div>
+<div class="ctrl">
+  <div class="steps"><span class="stp on" id="s0">点</span><span class="stp" id="s1">整流</span><span class="stp" id="s2">引き</span></div>
+  <button class="btn" id="btn">▶ 整える<span class="h">クリック / Space / →</span></button>
+</div>
+<script>
+(function(){
+  var cv=document.getElementById('c'), ctx=cv.getContext('2d');
+  var W,H,DPR,time=0;
+  var LW=36, SP=100;                       // 36 lines in the world, 100 world units apart
+  var F0=15, FN=6;                         // focus = the 6 lines we zoom into (centered)
+  var cyW=(LW-1)*SP/2;                      // world center == focus center
+  var ph1=[],ph2=[],ph3=[];
+  for(var i=0;i<LW;i++){ ph1[i]=Math.random()*6.28; ph2[i]=Math.random()*6.28; ph3[i]=Math.random()*6.28; }
+  var act=0, animating=false, focusOrder=0, focusOrderT=0;
+  var cam={s:1, cy:cyW};
+  var dull=[96,150,150], clean=[150,214,202];
+
+  function zoomS(){ return H/((FN+0.9)*SP); }     // 6 lines fill the screen
+  function fullS(){ return H/((LW+1.4)*SP); }     // all 36 fill the screen
+  function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=innerWidth;H=innerHeight; cv.width=W*DPR;cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); cam.s=(act<2?zoomS():fullS()); }
+  addEventListener('resize',resize); resize(); cam.s=zoomS();
+
+  function mix(a,b,k){ return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]; }
+  function sy(yw){ return (yw-cam.cy)*cam.s + H/2; }
+  function lineYW(i,x,fo){
+    var by=i*SP;
+    var calm = by + SP*0.14*Math.sin(x*0.0036 + time*0.5 + i*0.7);
+    var mess = by + SP*0.72*Math.sin(x*0.0110 + ph1[i] + time*0.32)
+                  + SP*0.40*Math.sin(x*0.0230 + ph2[i] - time*0.24)
+                  + SP*0.18*Math.sin(x*0.0450 + ph3[i] + time*0.5);
+    var isF = (i>=F0 && i<F0+FN);
+    var t = isF ? fo : 0;
+    return mess + (calm-mess)*t;
+  }
+
+  function tween(obj,key,to,dur,cb){ var from=obj[key],t0=null;
+    function fr(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1); var e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+      obj[key]=from+(to-from)*e; if(p<1)requestAnimationFrame(fr); else if(cb)cb(); } requestAnimationFrame(fr); }
+
+  function frame(){
+    time+=0.016; focusOrder+=(focusOrderT-focusOrder)*0.03;
+    ctx.globalCompositeOperation='source-over'; ctx.fillStyle='#0e1216'; ctx.fillRect(0,0,W,H);
+    var ratio=cam.s/zoomS();                       // 1 at zoom, small at full
+    var steps=Math.max(40,Math.floor(W/26)), dx=(W+40)/steps;
+    var lwd=Math.max(0.7, Math.min(2.4, 2.3*ratio+0.4));
+    var blur=14*ratio;
+
+    for(var i=0;i<LW;i++){
+      var isF=(i>=F0 && i<F0+FN);
+      var fo=isF?focusOrder:0;
+      // cull lines fully off-screen
+      var midY=sy(i*SP); if(midY<-60||midY>H+60) continue;
+      ctx.beginPath();
+      for(var s=0;s<=steps;s++){ var x=-20+dx*s, y=sy(lineYW(i,x,fo)); s?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      var col=mix(dull,clean,fo);
+      ctx.shadowBlur=blur; ctx.shadowColor='rgba(121,199,191,0.5)';
+      ctx.strokeStyle='rgba('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+',0.82)'; ctx.lineWidth=lwd; ctx.stroke();
+      ctx.shadowBlur=0;
+      // flowing light
+      ctx.setLineDash([2,30]); ctx.lineDashOffset=-(time*60*(0.8+fo*1.1)+i*40);
+      ctx.strokeStyle='rgba(200,244,238,'+(0.30+fo*0.30).toFixed(2)+')'; ctx.lineWidth=lwd*1.05; ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // in 引き: bracket the (now tiny) 6 cleaned lines
+    if(act===2){
+      var yTop=sy(F0*SP)-6, yBot=sy((F0+FN-1)*SP)+6, bx=Math.max(40,W*0.07);
+      ctx.strokeStyle='rgba(189,239,250,0.6)'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(bx+10,yTop); ctx.lineTo(bx,yTop); ctx.lineTo(bx,yBot); ctx.lineTo(bx+10,yBot); ctx.stroke();
+      ctx.fillStyle='rgba(202,191,174,0.9)'; ctx.font='12px "JetBrains Mono",monospace'; ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillText('さっき整えた6本', bx+16, (yTop+yBot)/2);
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  var capB=document.getElementById('capB'),capS=document.getElementById('capS'),btn=document.getElementById('btn');
+  var stp=[document.getElementById('s0'),document.getElementById('s1'),document.getElementById('s2')];
+  var caps=[
+    {b:'ぐちゃぐちゃに、進んでいる。', s:'まずは、この6本。もたついて絡んでいる。', btn:'▶ 整える'},
+    {b:'整えると、<span class="t">すっと流れる</span>。', s:'この6本は、綺麗になった。&nbsp;＝&nbsp;<span class="em">点の効率化</span>', btn:'▶ 引いて、全体を見る'},
+    {b:'でも、引いて見ると——', s:'さっきの6本は、全体のほんの一部。結局、まだぐちゃぐちゃ。', btn:'↺ もう一度'}
+  ];
+  function paint(i){ capB.innerHTML=caps[i].b; capS.innerHTML=caps[i].s; btn.innerHTML=caps[i].btn+'<span class="h">クリック / Space / →</span>';
+    stp.forEach(function(e,idx){ e.classList.toggle('on',idx===i); e.classList.toggle('done',idx<i); }); }
+
+  function go(){ if(animating) return;
+    if(act===0){ act=1; animating=true; btn.disabled=true; focusOrderT=1; paint(1);
+      setTimeout(function(){ animating=false; btn.disabled=false; },1600); return; }
+    if(act===1){ act=2; animating=true; btn.disabled=true; paint(2);
+      tween(cam,'s', fullS(), 3200, function(){ animating=false; btn.disabled=false; }); return; }
+    if(act===2){ act=0; focusOrderT=0; paint(0);
+      tween(cam,'s', zoomS(), 1800); }
+  }
+  btn.addEventListener('click',go); cv.addEventListener('click',go);
+  document.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='ArrowRight'||e.key==='Enter'){ e.preventDefault(); go(); } });
+})();
+</script>
+</body>
+</html>

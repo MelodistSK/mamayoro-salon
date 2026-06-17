@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>点と線｜川の三幕 ── 静岡ママヨロサロン</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#14110d; --bg2:#1b1712; --surface:#211c16; --raised:#2a241c;
+    --line:rgba(234,180,100,.16); --line-soft:rgba(245,237,224,.07);
+    --ink:#f5ede0; --ink-2:#cabfae; --ink-3:#8a7f6d;
+    --gold:#eab464; --gold-strong:#f3c479; --gold-soft:rgba(234,180,100,.13);
+    --teal:#79c7bf; --teal-bright:#bdeffa; --teal-soft:rgba(121,199,191,.11);
+    --coral:#e2906f;
+    --serif:"Shippori Mincho B1","Noto Serif JP",serif;
+    --sans:"Zen Kaku Gothic New","Noto Sans JP",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+    line-height:1.7; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+    background-image:
+      radial-gradient(120% 90% at 12% -5%, rgba(234,180,100,.10), transparent 55%),
+      radial-gradient(90% 70% at 100% 0%, rgba(121,199,191,.06), transparent 50%);
+    background-attachment:fixed;
+  }
+  .grain{
+    position:fixed; inset:0; pointer-events:none; z-index:60; opacity:.4;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+    mix-blend-mode:overlay;
+  }
+
+  /* ============ SHARED PANEL ============ */
+  .panel{min-height:100vh; display:flex; flex-direction:column; justify-content:center;
+    align-items:center; text-align:center; padding:60px 26px; position:relative; z-index:2}
+  .kick{font-family:var(--mono); font-size:12px; letter-spacing:.4em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:24px; display:flex; align-items:center; gap:13px}
+  .kick::before,.kick::after{content:""; width:26px; height:1px; background:linear-gradient(90deg,transparent,var(--gold-soft),transparent)}
+  .reveal{opacity:0; transform:translateY(22px); transition:opacity 1s ease, transform 1s cubic-bezier(.2,.7,.3,1)}
+  .reveal.in{opacity:1; transform:none}
+
+  .big{font-family:var(--serif); font-weight:800; line-height:1.28;
+    font-size:clamp(30px,5.4vw,58px); letter-spacing:.02em}
+  .big .g{color:var(--gold-strong)}
+  .big .t{color:var(--teal)}
+  .lead{font-size:clamp(15px,2.1vw,18px); color:var(--ink-2); max-width:30em; margin-top:28px; line-height:1.95}
+  .lead b{color:var(--ink); font-weight:700}
+  .lead .g{color:var(--gold-strong); font-weight:700}
+
+  .cue{position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
+    font-family:var(--mono); font-size:11px; letter-spacing:.3em; color:var(--ink-3);
+    display:flex; flex-direction:column; align-items:center; gap:9px}
+  .cue .ch{width:11px; height:11px; border-right:1.5px solid var(--gold); border-bottom:1.5px solid var(--gold);
+    transform:rotate(45deg); animation:bob 1.8s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0); opacity:.4}50%{transform:rotate(45deg) translate(4px,4px); opacity:1}}
+
+  /* ============ STAGE (river) ============ */
+  #stage{height:100vh; position:relative; overflow:hidden; z-index:2;
+    background:
+      radial-gradient(120% 100% at 50% 120%, rgba(234,180,100,.05), transparent 60%),
+      radial-gradient(100% 90% at 50% -10%, rgba(11,22,36,.6), transparent 55%),
+      linear-gradient(180deg,#0d1a26,#0a141d 60%,#0c0a07)}
+  #riverSvg{position:absolute; inset:0; width:100%; height:100%; display:block}
+
+  /* caption overlay */
+  .cap{position:absolute; left:0; right:0; bottom:148px; text-align:center; pointer-events:none; padding:0 24px; z-index:5}
+  .cap .cbig{font-family:var(--serif); font-weight:800; font-size:clamp(26px,4.4vw,46px);
+    letter-spacing:.02em; color:var(--ink); text-shadow:0 4px 30px rgba(0,0,0,.7), 0 1px 4px rgba(0,0,0,.9);
+    opacity:0; transform:translateY(14px); transition:opacity .7s ease, transform .7s cubic-bezier(.2,.7,.3,1)}
+  .cap .csub{font-size:clamp(13.5px,1.8vw,16.5px); color:var(--ink-2); margin-top:14px; line-height:1.85;
+    max-width:34em; margin-left:auto; margin-right:auto; text-shadow:0 2px 16px rgba(0,0,0,.85);
+    opacity:0; transform:translateY(14px); transition:opacity .7s ease .08s, transform .7s cubic-bezier(.2,.7,.3,1) .08s}
+  .cap.show .cbig,.cap.show .csub{opacity:1; transform:none}
+  .cap .cbig .g{color:var(--gold-strong)} .cap .cbig .t{color:var(--teal-bright)}
+
+  /* controls */
+  .controls{position:absolute; left:0; right:0; bottom:40px; display:flex; flex-direction:column;
+    align-items:center; gap:18px; z-index:6}
+  .steps{display:flex; gap:9px}
+  .step{font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; color:var(--ink-3);
+    border:1px solid var(--line-soft); border-radius:100px; padding:5px 14px; background:rgba(20,17,13,.45);
+    transition:.4s; backdrop-filter:blur(4px)}
+  .step.on{color:#1a1408; background:var(--gold); border-color:var(--gold); font-weight:700}
+  .step.done{color:var(--gold); border-color:var(--line)}
+  .btn{font-family:var(--sans); font-weight:700; font-size:clamp(15px,1.9vw,17px); letter-spacing:.04em;
+    color:#1a1408; background:linear-gradient(180deg,var(--gold-strong),var(--gold)); border:none; cursor:pointer;
+    padding:15px 34px; border-radius:100px; box-shadow:0 10px 30px rgba(234,180,100,.28), 0 2px 0 rgba(255,255,255,.25) inset;
+    transition:transform .2s cubic-bezier(.2,.7,.3,1), box-shadow .25s, opacity .3s; position:relative}
+  .btn:hover{transform:translateY(-2px); box-shadow:0 16px 40px rgba(234,180,100,.4)}
+  .btn:active{transform:translateY(0)}
+  .btn:disabled{opacity:.45; cursor:default; transform:none; box-shadow:0 6px 18px rgba(0,0,0,.3)}
+  .btn .hint{display:block; font-family:var(--mono); font-weight:500; font-size:10px; letter-spacing:.16em;
+    color:rgba(26,20,8,.6); margin-top:3px}
+  .corner{position:absolute; top:26px; left:28px; z-index:6; font-family:var(--mono); font-size:11px;
+    letter-spacing:.28em; color:var(--gold); text-transform:uppercase; opacity:.85}
+
+  /* ===== SVG element styling ===== */
+  .flow{stroke-dasharray:30 26; animation:dashflow 2.4s linear infinite}
+  .flow-fast{stroke-dasharray:14 34; animation:dashflow 1.5s linear infinite}
+  @keyframes dashflow{to{stroke-dashoffset:-224}}
+  .draw{stroke-dasharray:1; stroke-dashoffset:1}
+  .draw.on{transition:stroke-dashoffset 1.5s cubic-bezier(.45,0,.2,1); stroke-dashoffset:0}
+
+  #rocks{transition:opacity 1s ease, transform 1.2s cubic-bezier(.45,0,.2,1)}
+  #rocks.gone{opacity:0; transform:translate(34px,86px) scale(.7)}
+
+  #bypassGrp,#sparkles{opacity:0; transition:opacity .9s ease .5s}
+  #bypassGrp.on,#sparkles.on{opacity:1}
+
+  #maze,#gaps,#clearedMark{opacity:0; transition:opacity 1.1s ease}
+  [data-act="2"] #maze,[data-act="2"] #gaps,[data-act="2"] #clearedMark{opacity:1}
+  [data-act="3"] #maze{opacity:.07}
+  [data-act="3"] #gaps{opacity:0}
+  [data-act="3"] #clearedMark{opacity:0}
+
+  #cleanGrp{opacity:0; transition:opacity 1s ease}
+  [data-act="3"] #cleanGrp{opacity:1}
+  /* in Act 3 the OLD river & point-fixes recede so only the line remains */
+  #mainUnder,#mainOver{transition:opacity 1s ease}
+  #stage[data-act="3"] #mainUnder{opacity:.06}
+  #stage[data-act="3"] #mainOver{opacity:.06}
+  #stage[data-act="3"] #bypassGrp{opacity:0}
+  #stage[data-act="3"] #sparkles{opacity:0}
+
+  .sparkle{animation:tw 2.4s ease-in-out infinite}
+  .sparkle:nth-child(2){animation-delay:.5s}
+  .sparkle:nth-child(3){animation-delay:1s}
+  @keyframes tw{0%,100%{opacity:.5}50%{opacity:1}}
+  #ring{animation:ringPulse 2.6s ease-in-out infinite}
+  @keyframes ringPulse{0%,100%{r:20px; opacity:.85}50%{r:34px; opacity:.25}}
+  .glab{font-family:var(--mono); font-size:30px; font-weight:700; letter-spacing:.06em; fill:var(--coral)}
+  .glab-s{font-family:var(--sans); font-size:22px; fill:var(--ink-3)}
+  .lead-line{stroke:var(--coral); stroke-width:2; stroke-dasharray:5 5; opacity:.7}
+  .db-lab{font-family:var(--mono); font-size:26px; font-weight:700; letter-spacing:.1em; fill:#1a1408}
+
+  footer{position:relative; z-index:2; text-align:center; padding:34px 20px 50px;
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--ink-3)}
+
+  @media(max-width:560px){
+    .cap{bottom:170px}
+    .controls{bottom:30px}
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<!-- ============ PANEL 1 : INTRO ============ -->
+<section class="panel" id="intro">
+  <div class="kick reveal">Beat 02 ・ 点 と 線</div>
+  <h2 class="big reveal" style="transition-delay:.1s">AIの使い方には、<br><span class="g">「点」</span>と<span class="t">「線」</span>がある。</h2>
+  <p class="lead reveal" style="transition-delay:.22s">
+    <span class="g">点</span>は、手元が速くなる。資料、文章、調べ物。<br>
+    <span class="t">線</span>は、業務がつながって、勝手に流れる。<br>
+    ——でも、個人が速くなっても、<b>組織は、なぜか変わらない。</b>
+  </p>
+  <div class="cue"><span>SCROLL</span><span class="ch"></span></div>
+</section>
+
+<!-- ============ PANEL 2 : RIVER STAGE ============ -->
+<section id="stage" data-act="0">
+  <div class="corner">点 → あいだ → 線</div>
+
+  <svg id="riverSvg" viewBox="710 380 820 461" preserveAspectRatio="xMidYMid meet"
+       xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+      <radialGradient id="bgGrad" cx="50%" cy="120%" r="90%">
+        <stop offset="0%" stop-color="#0f2433"/><stop offset="100%" stop-color="#0a121b"/>
+      </radialGradient>
+      <linearGradient id="cleanGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#79c7bf"/><stop offset="55%" stop-color="#bdeffa"/>
+        <stop offset="100%" stop-color="#f3c479"/>
+      </linearGradient>
+      <linearGradient id="dbGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f3c479"/><stop offset="100%" stop-color="#d29a45"/>
+      </linearGradient>
+      <filter id="glowGold" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="glowTeal" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- world backdrop -->
+    <rect x="0" y="0" width="2400" height="1350" fill="url(#bgGrad)"/>
+
+    <!-- ===== MUDDY MAZE (revealed on pull-back) ===== -->
+    <g id="maze" fill="none" stroke="#2a4a57" stroke-width="13" stroke-linecap="round">
+      <!-- dead-end branches & tangle off the main spine -->
+      <path d="M1000,580 C 880,470 820,400 745,338"/>
+      <path d="M745,338 C 600,425 560,560 645,700"/>
+      <path d="M1000,580 C 1010,720 1000,860 1010,958"/>
+      <path d="M1300,655 C 1180,760 1120,900 1185,1030"/>
+      <path d="M1180,610 C 1320,560 1420,600 1520,735"/>
+      <path d="M1760,830 C 1980,895 2060,1015 2120,1058"/>
+      <path d="M1300,655 C 1430,640 1560,560 1700,520"/>
+      <path d="M1010,958 C 1180,1010 1360,990 1470,1075"/>
+      <!-- oxbow loop -->
+      <path d="M1740,820 C 1630,905 1700,1010 1825,985 C 1910,968 1885,872 1798,856"/>
+      <!-- dead-end ponds -->
+      <ellipse cx="745" cy="320" rx="48" ry="31" fill="#163243" stroke="none"/>
+      <ellipse cx="1012" cy="985" rx="74" ry="46" fill="#163243" stroke="none"/>
+      <ellipse cx="655" cy="735" rx="52" ry="35" fill="#163243" stroke="none"/>
+      <ellipse cx="1480" cy="1090" rx="60" ry="38" fill="#163243" stroke="none"/>
+      <!-- weirs (clogged bars across channels) -->
+      <g stroke="#3c4b59" stroke-width="9" stroke-linecap="butt">
+        <line x1="980" y1="700" x2="1042" y2="740"/>
+        <line x1="1150" y1="880" x2="1216" y2="912"/>
+        <line x1="1660" y1="510" x2="1726" y2="532"/>
+      </g>
+    </g>
+
+    <!-- ===== MAIN RIVER (the spine — focus of Act 1) ===== -->
+    <path id="mainUnder" d="M150,250 C 500,320 700,520 1010,580 S 1520,740 1760,830 S 2150,1080 2270,1180"
+          fill="none" stroke="#1e5e73" stroke-width="32" stroke-linecap="round"/>
+    <path id="mainOver" d="M150,250 C 500,320 700,520 1010,580 S 1520,740 1760,830 S 2150,1080 2270,1180"
+          fill="none" stroke="#54c8de" stroke-width="15" stroke-linecap="round" opacity=".92"/>
+
+    <!-- bypass channel that opens when rocks are cleared -->
+    <g id="bypassGrp">
+      <path id="bypass" class="draw" pathLength="1" d="M998,582 C 1070,656 1180,662 1262,612"
+            fill="none" stroke="#7fe3f2" stroke-width="13" stroke-linecap="round" filter="url(#glowTeal)"/>
+    </g>
+
+    <!-- rock clog (Act 0) -->
+    <g id="rocks">
+      <polygon points="1086,566 1112,558 1132,576 1120,600 1092,598" fill="#586679"/>
+      <polygon points="1118,584 1146,578 1160,600 1142,618 1116,610" fill="#46535f"/>
+      <polygon points="1070,590 1096,588 1104,612 1082,624 1062,608" fill="#6a7989"/>
+      <polygon points="1100,604 1128,602 1138,626 1114,636 1094,622" fill="#3c4b59"/>
+      <polygon points="1132,560 1156,556 1166,574 1150,588 1128,580" fill="#5c6b7a"/>
+      <circle cx="1150" cy="612" r="11" fill="#4e5c69"/>
+      <circle cx="1078" cy="572" r="8" fill="#677685"/>
+    </g>
+
+    <!-- cleared sparkles (the tiny fixed spot) -->
+    <g id="sparkles" fill="#bdeffa" filter="url(#glowTeal)">
+      <circle class="sparkle" cx="1076" cy="598" r="6"/>
+      <circle class="sparkle" cx="1110" cy="606" r="7"/>
+      <circle class="sparkle" cx="1144" cy="600" r="6"/>
+    </g>
+
+    <!-- "you fixed only this" marker (Act 2) -->
+    <g id="clearedMark">
+      <circle id="ring" cx="1110" cy="600" r="20" fill="none" stroke="#bdeffa" stroke-width="2"/>
+      <line class="lead-line" x1="1120" y1="582" x2="1230" y2="470" stroke="#bdeffa" opacity=".6"/>
+      <text x="1240" y="464" class="glab-s" fill="#bdeffa">さっき直したのは、ここ一カ所</text>
+    </g>
+
+    <!-- "あいだ" labels (Act 2) -->
+    <g id="gaps">
+      <g>
+        <line class="lead-line" x1="980" y1="560" x2="700" y2="452"/>
+        <text x="548" y="446" class="glab">引き継ぎ</text>
+      </g>
+      <g>
+        <line class="lead-line" x1="1010" y1="720" x2="780" y2="838"/>
+        <text x="556" y="846" class="glab">確認待ち</text>
+      </g>
+      <g>
+        <line class="lead-line" x1="1820" y1="965" x2="1980" y2="1052"/>
+        <text x="1992" y="1060" class="glab">手戻り</text>
+      </g>
+      <g>
+        <line class="lead-line" x1="1360" y1="592" x2="1452" y2="486"/>
+        <text x="1464" y="480" class="glab">二重入力</text>
+      </g>
+    </g>
+
+    <!-- ===== CLEAN REBUILT FLOW (Act 3) ===== -->
+    <g id="cleanGrp">
+      <path id="cleanGlow" d="M196,250 C 640,300 770,560 1110,612 S 1700,860 1980,985 S 2200,1140 2270,1180"
+            fill="none" stroke="url(#cleanGrad)" stroke-width="34" stroke-linecap="round" opacity=".34" filter="url(#glowGold)"/>
+      <path id="cleanPath" class="draw" pathLength="1" d="M196,250 C 640,300 770,560 1110,612 S 1700,860 1980,985 S 2200,1140 2270,1180"
+            fill="none" stroke="url(#cleanGrad)" stroke-width="22" stroke-linecap="round"/>
+      <path id="cleanFlow" class="draw" pathLength="1" d="M196,250 C 640,300 770,560 1110,612 S 1700,860 1980,985 S 2200,1140 2270,1180"
+            fill="none" stroke="#eaffff" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+
+      <!-- process dots riding the current -->
+      <g id="procDots" fill="url(#dbGrad)" filter="url(#glowGold)">
+        <circle r="13"><animateMotion dur="7s" begin="indefinite" repeatCount="indefinite"><mpath xlink:href="#cleanPath"/></animateMotion></circle>
+        <circle r="13"><animateMotion dur="7s" begin="indefinite" repeatCount="indefinite"><mpath xlink:href="#cleanPath"/></animateMotion></circle>
+        <circle r="13"><animateMotion dur="7s" begin="indefinite" repeatCount="indefinite"><mpath xlink:href="#cleanPath"/></animateMotion></circle>
+        <circle r="13"><animateMotion dur="7s" begin="indefinite" repeatCount="indefinite"><mpath xlink:href="#cleanPath"/></animateMotion></circle>
+        <circle r="13"><animateMotion dur="7s" begin="indefinite" repeatCount="indefinite"><mpath xlink:href="#cleanPath"/></animateMotion></circle>
+      </g>
+
+      <!-- DB source cylinder (gold = database) -->
+      <g id="dbSource">
+        <ellipse cx="180" cy="300" rx="40" ry="13" fill="#b07f33"/>
+        <rect x="140" y="232" width="80" height="68" fill="url(#dbGrad)"/>
+        <ellipse cx="180" cy="232" rx="40" ry="13" fill="#ffd98a"/>
+        <ellipse cx="180" cy="232" rx="40" ry="13" fill="none" stroke="#fff2d4" stroke-width="1.5" opacity=".5"/>
+        <path d="M140,258 a40,13 0 0 0 80,0" fill="none" stroke="#b07f33" stroke-width="1.4" opacity=".6"/>
+        <path d="M140,282 a40,13 0 0 0 80,0" fill="none" stroke="#b07f33" stroke-width="1.4" opacity=".6"/>
+        <text x="180" y="208" text-anchor="middle" class="db-lab" fill="#f3c479">DB</text>
+      </g>
+    </g>
+  </svg>
+
+  <!-- caption overlay -->
+  <div class="cap show" id="cap">
+    <div class="cbig" id="capBig">ここに、詰まりがある。</div>
+    <div class="csub" id="capSub">ひとつの工程。手作業で、毎回ここで止まる。</div>
+  </div>
+
+  <!-- controls -->
+  <div class="controls">
+    <div class="steps">
+      <span class="step on" data-s="0">点</span>
+      <span class="step" data-s="1">あいだ</span>
+      <span class="step" data-s="2">線</span>
+    </div>
+    <button class="btn" id="advance">▶ 石をどかす<span class="hint">クリック / Space / →</span></button>
+  </div>
+</section>
+
+<!-- ============ PANEL 3 : OUTRO ============ -->
+<section class="panel" id="outro">
+  <div class="kick reveal">では、その「あいだ」をまたぐ——</div>
+  <h2 class="big reveal" style="transition-delay:.1s">崖の正体は、<br><span class="g">データベース。</span></h2>
+  <p class="lead reveal" style="transition-delay:.22s">
+    あるか、ないか。<b>それだけ</b>で、世界が変わる。<br>
+    DBさえ整えば、AIは構造を理解して、<br>目的に向かって、勝手に道を作る。
+  </p>
+  <p class="lead reveal" style="transition-delay:.34s; color:var(--ink-3); font-size:14px; margin-top:18px">——なんで？ は、ここから話します。</p>
+</section>
+
+<footer>静岡ママヨロサロン｜点と線 ── 川の三幕（プロトタイプ v1）</footer>
+
+<script>
+(function(){
+  var svg   = document.getElementById('riverSvg');
+  var stage = document.getElementById('stage');
+  var capEl = document.getElementById('cap');
+  var capBig= document.getElementById('capBig');
+  var capSub= document.getElementById('capSub');
+  var btn   = document.getElementById('advance');
+  var steps = Array.prototype.slice.call(document.querySelectorAll('.step'));
+
+  var VIEW_NEAR = [710,380,820,461];   // zoomed on the clog
+  var VIEW_FULL = [0,0,2400,1350];     // whole delta
+
+  var caps = [
+    {big:'ここに、詰まりがある。', sub:'ひとつの工程。手作業で、毎回ここで止まる。', btn:'▶ 石をどかす', step:0},
+    {big:'石をどかせば、<span class="t">流れる</span>。', sub:'これが「点」。手元の詰まりは、直せる。', btn:'▶ 引いて、全体を見る', step:0},
+    {big:'——直したのは、ほんの<span class="t">一カ所</span>。', sub:'ムダは作業の「中」じゃない。工程と工程の「あいだ」に溜まっている。', btn:'▶ 川ごと、線にする', step:1},
+    {big:'川ごと、<span class="g">整える</span>。', sub:'点が、線になる。', btn:'↺ もう一度', step:2}
+  ];
+
+  var act = 0;
+  var animating = false;
+
+  function setCaption(i){
+    capEl.classList.remove('show');
+    setTimeout(function(){
+      capBig.innerHTML = caps[i].big;
+      capSub.innerHTML = caps[i].sub;
+      capEl.classList.add('show');
+    }, 260);
+  }
+  function setButton(i){ btn.innerHTML = caps[i].btn + '<span class="hint">クリック / Space / →</span>'; }
+  function setSteps(i){
+    var s = caps[i].step;
+    steps.forEach(function(el,idx){
+      el.classList.toggle('on', idx===s);
+      el.classList.toggle('done', idx<s);
+    });
+  }
+
+  // easeInOutCubic viewBox tween (the camera move)
+  function tweenView(from,to,dur,cb){
+    var t0=null;
+    function frame(ts){
+      if(!t0) t0=ts;
+      var p=Math.min((ts-t0)/dur,1);
+      var e = p<0.5 ? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2;
+      var v=[0,1,2,3].map(function(k){return from[k]+(to[k]-from[k])*e;});
+      svg.setAttribute('viewBox', v.join(' '));
+      if(p<1){ requestAnimationFrame(frame); } else if(cb){ cb(); }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function beginDots(){
+    var dots=document.querySelectorAll('#procDots animateMotion');
+    Array.prototype.forEach.call(dots,function(d,i){
+      setTimeout(function(){ try{ d.beginElement(); }catch(e){} }, i*1300);
+    });
+  }
+
+  function go(){
+    if(animating) return;
+
+    // ACT 0 -> 1 : clear the rocks (no camera move, stay zoomed)
+    if(act===0){
+      act=1; animating=true; btn.disabled=true;
+      document.getElementById('rocks').classList.add('gone');
+      document.getElementById('bypassGrp').classList.add('on');
+      document.getElementById('bypass').classList.add('on');
+      document.getElementById('sparkles').classList.add('on');
+      document.getElementById('mainOver').classList.add('flow');
+      setCaption(1); setButton(1); setSteps(1);
+      setTimeout(function(){ animating=false; btn.disabled=false; }, 1200);
+      return;
+    }
+
+    // ACT 1 -> 2 : the big pull-back (camera dollies out)
+    if(act===1){
+      act=2; animating=true; btn.disabled=true;
+      stage.setAttribute('data-act','2');
+      tweenView(VIEW_NEAR, VIEW_FULL, 2500, function(){
+        setCaption(2); setButton(2); setSteps(2);
+        animating=false; btn.disabled=false;
+      });
+      return;
+    }
+
+    // ACT 2 -> 3 : rebuild into one line
+    if(act===2){
+      act=3; animating=true; btn.disabled=true;
+      stage.setAttribute('data-act','3');
+      setTimeout(function(){
+        document.getElementById('cleanPath').classList.add('on');
+        document.getElementById('cleanFlow').classList.add('on');
+        document.getElementById('cleanFlow').classList.add('flow-fast');
+        beginDots();
+      }, 350);
+      setCaption(3); setButton(3); setSteps(3);
+      setTimeout(function(){ animating=false; btn.disabled=false; }, 1500);
+      return;
+    }
+
+    // ACT 3 -> reset
+    if(act===3){
+      act=0;
+      stage.setAttribute('data-act','0');
+      document.getElementById('rocks').classList.remove('gone');
+      document.getElementById('bypassGrp').classList.remove('on');
+      document.getElementById('bypass').classList.remove('on');
+      document.getElementById('sparkles').classList.remove('on');
+      document.getElementById('mainOver').classList.remove('flow');
+      document.getElementById('cleanPath').classList.remove('on');
+      document.getElementById('cleanFlow').classList.remove('on','flow-fast');
+      tweenView(VIEW_FULL, VIEW_NEAR, 1400);
+      setCaption(0); setButton(0); setSteps(0);
+    }
+  }
+
+  btn.addEventListener('click', go);
+  stage.addEventListener('click', function(e){ if(e.target!==btn && !btn.contains(e.target)) go(); });
+
+  // keyboard / clicker — only when the stage is on screen
+  var stageVisible=false;
+  document.addEventListener('keydown', function(e){
+    if(!stageVisible) return;
+    if(e.key===' '||e.key==='ArrowRight'||e.key==='PageDown'||e.key==='Enter'){ e.preventDefault(); go(); }
+  });
+
+  // reveal-on-scroll for intro/outro
+  var io=new IntersectionObserver(function(ents){
+    ents.forEach(function(en){ if(en.isIntersecting) en.target.classList.add('in'); });
+  },{threshold:.25});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+  // track stage visibility for keyboard control
+  var sio=new IntersectionObserver(function(ents){
+    ents.forEach(function(en){ stageVisible = en.isIntersecting && en.intersectionRatio>0.5; });
+  },{threshold:[0,0.5,1]});
+  sio.observe(stage);
+})();
+</script>
+</body>
+</html>

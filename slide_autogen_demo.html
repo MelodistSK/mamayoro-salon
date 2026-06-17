@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>③ DBから、スライドが自動で完成する</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#13110c;--panel:#1b1813;--line:rgba(245,237,224,.1);
+    --ink:#f5ede0;--ink-2:#c9bfae;--ink-3:#8a7f6d;
+    --gold:#e7c477;--gold-deep:#d4af5a;--gold-soft:rgba(231,196,119,.14);
+    --navy0:#0b1733;--navy1:#16315f;--paper-gold:#f0d488;
+    --serif:"Shippori Mincho B1",serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(120% 90% at 10% -10%,rgba(231,196,119,.07),transparent 55%);min-height:100vh}
+  .wrap{max-width:1180px;margin:0 auto;padding:40px 26px 80px}
+  .head{margin-bottom:30px}
+  .kick{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+  h1{font-family:var(--serif);font-weight:800;font-size:clamp(24px,3.6vw,38px);letter-spacing:.02em;line-height:1.3}
+  h1 .g{color:var(--gold)}
+  .sub{color:var(--ink-2);font-size:14.5px;margin-top:12px;max-width:60ch}
+
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+
+  /* DB card (kintone-like) */
+  .db{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 20px;position:sticky;top:20px}
+  .db h2{font-size:12px;font-family:var(--mono);letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;margin-bottom:4px}
+  .db .dbname{font-size:13px;color:var(--ink-2);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+  .db .dot{width:7px;height:7px;border-radius:50%;background:#5bbf8a;box-shadow:0 0 8px #5bbf8a}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{font-family:var(--mono);font-weight:500;color:var(--ink-3);text-align:left;padding:6px 6px;border-bottom:1px solid var(--line);font-size:10.5px;letter-spacing:.04em}
+  td{padding:6px 6px;border-bottom:1px solid rgba(245,237,224,.05);color:var(--ink-2);white-space:nowrap}
+  td.nm{color:var(--ink);font-weight:500}
+  tr.hit td{background:var(--gold-soft);color:var(--ink)}
+  tr.hit td.nm{color:var(--gold)}
+  .priv{color:var(--ink-3);font-size:10px}
+  .ctrls{margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .ctrls label{font-size:12px;color:var(--ink-3)}
+  select{font-family:var(--sans);font-size:14px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+  .run{font-family:var(--sans);font-weight:700;font-size:14px;color:#1a1408;background:linear-gradient(180deg,#f0d488,var(--gold-deep));border:none;border-radius:100px;padding:9px 20px;cursor:pointer;box-shadow:0 6px 18px rgba(212,175,90,.28)}
+  .run:hover{transform:translateY(-1px)}
+  .status{margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--ink-3);min-height:16px;letter-spacing:.04em}
+  .status b{color:var(--gold)}
+
+  /* generated slide */
+  .stageWrap{display:flex;flex-direction:column;gap:12px}
+  .slide{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    background:radial-gradient(120% 130% at 78% -10%,#1d3a6e,#0b1733 62%);
+    box-shadow:0 26px 70px rgba(0,0,0,.5),0 0 0 1px rgba(231,196,119,.18) inset;color:#f7f1e2}
+  .slide .emblem{position:absolute;right:-60px;top:50%;transform:translateY(-50%);width:420px;height:420px;opacity:.07;pointer-events:none}
+  .slide .filigree{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(231,196,119,.5),transparent)}
+  .slide .filigree.top{top:64px} .slide .filigree.bot{bottom:60px}
+  .slide .inner{position:absolute;inset:0;padding:clamp(20px,4.2%,52px) clamp(26px,5.5%,72px);display:flex;flex-direction:column}
+  .slide .scap{font-family:var(--mono);font-size:clamp(9px,1.05vw,12px);letter-spacing:.28em;color:var(--paper-gold);opacity:.85}
+  .slide .stitle{font-family:var(--serif);font-weight:800;font-size:clamp(26px,5.2vw,58px);letter-spacing:.04em;margin-top:6px;line-height:1.1;
+    background:linear-gradient(180deg,#fbeec4,#e0bd6c);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .slide .secs{display:flex;gap:clamp(20px,4vw,56px);margin-top:auto;margin-bottom:auto;flex-wrap:wrap}
+  .sec{flex:1;min-width:200px}
+  .sec .slab{font-family:var(--sans);font-weight:700;font-size:clamp(12px,1.5vw,16px);letter-spacing:.18em;color:var(--paper-gold);display:flex;align-items:center;gap:9px;margin-bottom:clamp(8px,1.4vw,16px)}
+  .sec .slab::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(231,196,119,.5),transparent)}
+  .entry{display:flex;align-items:baseline;gap:12px;padding:clamp(3px,.7vw,7px) 0;opacity:0;transform:translateY(10px)}
+  .entry.show{animation:rise .6s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .badge{font-family:var(--mono);font-weight:700;font-size:clamp(10px,1.15vw,13px);color:#1a1408;background:linear-gradient(180deg,#f3e0a8,#dcbd6e);border-radius:6px;padding:3px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  .nm-l{font-family:var(--serif);font-weight:700;font-size:clamp(16px,2.5vw,30px);letter-spacing:.04em}
+  .nm-l .sub2{font-size:.6em;color:var(--paper-gold);margin-left:6px;font-family:var(--sans);font-weight:500}
+  .none{color:rgba(247,241,226,.55);font-size:clamp(12px,1.4vw,15px);font-style:italic}
+  .sfoot{position:absolute;left:0;right:0;bottom:18px;text-align:center;font-family:var(--mono);font-size:clamp(8px,1vw,11px);letter-spacing:.12em;color:rgba(247,241,226,.5)}
+  .cap{font-size:13px;color:var(--ink-3);text-align:center}
+  .cap b{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="kick">③ プログラムが、DBを拾って自動で作る</div>
+    <h1>あの“地味な例会スライド”が、<br><span class="g">DBから、これに</span>。</h1>
+    <p class="sub">左は kintone の会員マスタ（＝データベース）。月を選ぶと、その月のお祝い対象だけをプログラムが抽出して、投影スライドを一枚に組み上げます。手作業ゼロ。数字（DB）を変えれば、作り直しも一瞬。</p>
+  </div>
+
+  <div class="grid">
+    <!-- DB -->
+    <div class="db">
+      <h2>会員マスタ</h2>
+      <div class="dbname"><span class="dot"></span>kintone（データベース）・11件</div>
+      <table><thead><tr><th>氏名</th><th>誕生日</th><th>結婚記念日</th></tr></thead><tbody id="tbody"></tbody></table>
+      <div class="ctrls">
+        <label>例会の月</label>
+        <select id="month"></select>
+        <button class="run" id="run">▶ 生成</button>
+      </div>
+      <div class="status" id="status">待機中…</div>
+    </div>
+
+    <!-- SLIDE -->
+    <div class="stageWrap">
+      <div class="slide" id="slide">
+        <svg class="emblem" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="#e7c477" stroke-width="1.4">
+          <circle cx="50" cy="50" r="20"/><circle cx="50" cy="50" r="9"/>
+          <g id="cogs"></g></g></svg>
+        <div class="filigree top"></div><div class="filigree bot"></div>
+        <div class="inner">
+          <div class="scap" id="sCap">静岡ロータリークラブ ・ 第3742回 例会</div>
+          <div class="stitle" id="sTitle">8月のお祝い</div>
+          <div class="secs" id="sSecs"></div>
+        </div>
+        <div class="sfoot" id="sFoot">2026.08.22 ｜ グランディエール ブケトーカイ</div>
+      </div>
+      <div class="cap">月を変えると、<b>その月のお祝い対象だけ</b>をDBから拾って、即作り直ります。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---- ダミー会員データ（架空・安全。本番フォルダのダミー値を複製） ----
+  var members=[
+    {id:"D001",name:"テスト 太郎", b:"08-20", a:null,    sp:null,        priv:false},
+    {id:"D002",name:"ダミー 花子", b:"08-21", a:"11-29", sp:"ダミー 一郎", priv:false},
+    {id:"D003",name:"サンプル 次郎",b:"08-23", a:null,    sp:null,        priv:false},
+    {id:"D004",name:"架空 三郎",   b:"08-26", a:"05-05", sp:"架空 良子",  priv:false},
+    {id:"D005",name:"デモ 四郎",   b:"08-26", a:null,    sp:null,        priv:false},
+    {id:"D006",name:"テスト 五郎", b:"12-01", a:null,    sp:null,        priv:false},
+    {id:"D007",name:"ダミー 六郎", b:"04-15", a:"04-20", sp:"ダミー 桜子",priv:false},
+    {id:"D008",name:"サンプル 七子",b:"08-22", a:null,    sp:null,        priv:false},
+    {id:"D009",name:"架空 八郎",   b:"08-19", a:"11-30", sp:"架空 八子",  priv:false},
+    {id:"D010",name:"デモ 九子",   b:"10-10", a:null,    sp:null,        priv:false},
+    {id:"D011",name:"架空 十郎",   b:null,    a:"08-20", sp:"架空 十子",  priv:true}
+  ];
+  var venue="グランディエール ブケトーカイ", meetingNo="第3742回";
+  function mm(s){ return s?parseInt(s.slice(0,2),10):null; }
+  function dd(s){ return parseInt(s.slice(3,5),10); }
+  function badge(s){ return mm(s)+"/"+dd(s); }
+
+  // cogs for emblem
+  (function(){ var g=document.getElementById('cogs'),s=''; for(var i=0;i<24;i++){ var a=i/24*6.2832,x1=50+Math.cos(a)*20,y1=50+Math.sin(a)*20,x2=50+Math.cos(a)*24,y2=50+Math.sin(a)*24; s+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'"/>'; } for(var k=0;k<6;k++){ var b=k/6*6.2832; s+='<line x1="'+(50+Math.cos(b)*9).toFixed(1)+'" y1="'+(50+Math.sin(b)*9).toFixed(1)+'" x2="'+(50+Math.cos(b)*20).toFixed(1)+'" y2="'+(50+Math.sin(b)*20).toFixed(1)+'"/>'; } g.innerHTML=s; })();
+
+  // DB table
+  var tb=document.getElementById('tbody');
+  members.forEach(function(m){ var tr=document.createElement('tr'); tr.id='row-'+m.id;
+    tr.innerHTML='<td class="nm">'+m.name+'</td><td>'+(m.b?badge(m.b):'—')+'</td><td>'+(m.a?badge(m.a)+(m.priv?' <span class="priv">(非公開)</span>':''):'—')+'</td>';
+    tb.appendChild(tr); });
+
+  var monthsAll=[]; for(var i=1;i<=12;i++) monthsAll.push(i);
+  var sel=document.getElementById('month');
+  monthsAll.forEach(function(m){ var o=document.createElement('option'); o.value=m; o.textContent=m+'月'; sel.appendChild(o); });
+  sel.value=8;
+
+  var sTitle=document.getElementById('sTitle'), sSecs=document.getElementById('sSecs'), sCap=document.getElementById('sCap'), sFoot=document.getElementById('sFoot'), status=document.getElementById('status');
+
+  function clearHits(){ members.forEach(function(m){ var r=document.getElementById('row-'+m.id); if(r) r.classList.remove('hit'); }); }
+
+  function generate(){
+    var M=parseInt(sel.value,10);
+    var bdays=members.filter(function(m){ return m.b && mm(m.b)===M; }).sort(function(a,b){ return dd(a.b)-dd(b.b); });
+    var anns =members.filter(function(m){ return m.a && mm(m.a)===M && !m.priv; }).sort(function(a,b){ return dd(a.a)-dd(b.a); });
+    var skipped=members.filter(function(m){ return m.a && mm(m.a)===M && m.priv; });
+
+    // status micro-steps
+    clearHits();
+    status.innerHTML='DBを読み込み中…';
+    setTimeout(function(){ status.innerHTML='抽出： 誕生日 <b>'+bdays.length+'</b> ／ 結婚記念日 <b>'+anns.length+'</b>'+(skipped.length?'（※非公開 '+skipped.length+' 件スキップ）':''); }, 240);
+
+    sCap.textContent='静岡ロータリークラブ ・ '+meetingNo+' 例会';
+    sTitle.textContent=M+'月のお祝い';
+    sFoot.textContent='2026.'+(M<10?'0'+M:M)+'.22 ｜ '+venue;
+
+    var html='';
+    html+='<div class="sec"><div class="slab">お誕生日</div>';
+    if(bdays.length){ bdays.forEach(function(m){ html+='<div class="entry"><span class="badge">'+badge(m.b)+'</span><span class="nm-l">'+m.name+'<span class="sub2">さん</span></span></div>'; }); }
+    else html+='<div class="none">— 今月は該当なし —</div>';
+    html+='</div>';
+    html+='<div class="sec"><div class="slab">ご結婚記念日</div>';
+    if(anns.length){ anns.forEach(function(m){ html+='<div class="entry"><span class="badge">'+badge(m.a)+'</span><span class="nm-l">'+m.name+'<span class="sub2">・'+(m.sp||'')+' さん</span></span></div>'; }); }
+    else html+='<div class="none">— 今月は該当なし —</div>';
+    html+='</div>';
+    sSecs.innerHTML=html;
+
+    // stagger reveal + highlight DB rows in sync
+    var entries=sSecs.querySelectorAll('.entry'); var order=bdays.concat(anns);
+    entries.forEach(function(el,idx){ setTimeout(function(){ el.classList.add('show'); var m=order[idx]; if(m){ var r=document.getElementById('row-'+m.id); if(r) r.classList.add('hit'); } }, 520+idx*150); });
+    setTimeout(function(){ skipped.forEach(function(m){ var r=document.getElementById('row-'+m.id); if(r) r.classList.add('hit'); }); }, 520);
+  }
+
+  document.getElementById('run').addEventListener('click',generate);
+  sel.addEventListener('change',generate);
+  generate();
+})();
+</script>
+</body>
+</html>

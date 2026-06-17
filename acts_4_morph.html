@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三幕 案4 ｜ 点→線モーフ型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#eab464;--gold-strong:#f3c479;--teal:#79c7bf;--teal-bright:#bdeffa;
+    --ink:#f5ede0;--ink-2:#cabfae;--ink-3:#8a7f6d;
+    --serif:"Shippori Mincho B1",serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0c0a07}
+  body{font-family:var(--sans);color:var(--ink)}
+  #c{position:fixed;inset:0;display:block;width:100%;height:100%}
+  .vig{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(125% 105% at 50% 50%,transparent 42%,rgba(8,6,4,.72) 100%)}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:.4;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+  .label{position:fixed;top:24px;left:28px;z-index:5;font-family:var(--mono);font-size:11px;letter-spacing:.26em;color:var(--gold);text-transform:uppercase}
+  .cap{position:fixed;left:0;right:0;bottom:120px;text-align:center;z-index:5;pointer-events:none;padding:0 24px}
+  .cap .b{font-family:var(--serif);font-weight:800;font-size:clamp(25px,4.4vw,46px);letter-spacing:.03em;text-shadow:0 4px 30px rgba(0,0,0,.82)}
+  .cap .b .g{color:var(--gold-strong)}.cap .b .t{color:var(--teal-bright)}
+  .cap .s{font-size:clamp(13px,1.7vw,15.5px);color:var(--ink-2);margin-top:12px;letter-spacing:.04em;text-shadow:0 2px 14px rgba(0,0,0,.9)}
+  .cap .s .em{color:var(--gold-strong);font-weight:700}
+  .ctrl{position:fixed;left:0;right:0;bottom:40px;display:flex;flex-direction:column;align-items:center;gap:15px;z-index:6}
+  .steps{display:flex;gap:8px}
+  .stp{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--ink-3);border:1px solid rgba(245,237,224,.1);border-radius:100px;padding:5px 13px;background:rgba(20,17,13,.5);backdrop-filter:blur(4px);transition:.4s}
+  .stp.on{color:#1a1408;background:var(--gold);border-color:var(--gold);font-weight:700}.stp.done{color:var(--gold)}
+  .btn{font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.05em;color:#1a1408;background:linear-gradient(180deg,var(--gold-strong),var(--gold));border:none;cursor:pointer;padding:14px 32px;border-radius:100px;box-shadow:0 10px 30px rgba(234,180,100,.3),0 2px 0 rgba(255,255,255,.25) inset;transition:transform .2s,box-shadow .25s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(234,180,100,.42)}.btn:disabled{opacity:.5}
+  .btn .h{display:block;font-family:var(--mono);font-weight:500;font-size:10px;letter-spacing:.16em;color:rgba(26,20,8,.6);margin-top:3px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="vig"></div><div class="grain"></div>
+<div class="label">三幕 案4 ｜ 点 → 線 モーフ型</div>
+<div class="cap"><div class="b" id="capB"><span class="t">点</span>。</div><div class="s" id="capS">手元の、一点。ここは速くなった。</div></div>
+<div class="ctrl">
+  <div class="steps"><span class="stp on" id="s0">寄り(点)</span><span class="stp" id="s1">引き</span><span class="stp" id="s2">再構築(線)</span></div>
+  <button class="btn" id="btn">▶ 引いて、全体を見る<span class="h">クリック / Space / →</span></button>
+</div>
+<script>
+(function(){
+  var cv=document.getElementById('c'),ctx=cv.getContext('2d');
+  var W,H,DPR,N,P,tTen,tSen,mode=0,time=0;
+  var teal=[121,199,191],tealB=[189,239,250],gold=[243,196,121];
+
+  function sampleGlyph(ch){
+    var oc=document.createElement('canvas'); oc.width=W; oc.height=H; var o=oc.getContext('2d');
+    o.fillStyle='#000'; o.fillRect(0,0,W,H);
+    o.fillStyle='#fff'; o.textAlign='center'; o.textBaseline='middle';
+    var fs=Math.floor(Math.min(W*0.6,H*0.72));
+    o.font='800 '+fs+'px "Shippori Mincho B1","Noto Serif JP",serif';
+    o.fillText(ch,W/2,H/2);
+    var d=o.getImageData(0,0,W,H).data, pts=[], step=Math.max(4,Math.floor(Math.min(W,H)/170));
+    for(var y=0;y<H;y+=step) for(var x=0;x<W;x+=step){ if(d[(y*W+x)*4]>128) pts.push([x,y]); }
+    return pts;
+  }
+  function diskFallback(){ var pts=[],R=Math.min(W,H)*0.13,cx=W/2,cy=H/2;
+    for(var i=0;i<1600;i++){ var a=Math.random()*6.283, r=Math.sqrt(Math.random())*R; pts.push([cx+Math.cos(a)*r, cy+Math.sin(a)*r]); } return pts; }
+  function lineFallback(){ var pts=[],w=Math.min(W*0.7,1100),cx=W/2,cy=H/2;
+    for(var i=0;i<2200;i++){ pts.push([cx-w/2+Math.random()*w, cy+(Math.random()-0.5)*Math.min(H*0.06,46)]); } return pts; }
+  function buildTargets(){
+    var a=sampleGlyph('点'); tTen=(a.length>120)?a:diskFallback();
+    var b=sampleGlyph('線'); tSen=(b.length>120)?b:lineFallback();
+  }
+  function initP(){ N=Math.min(5200,Math.floor(W*H/260)); P=new Float32Array(N*6); // x,y,vx,vy,ti,seed
+    for(var i=0;i<N;i++){ P[i*6]=Math.random()*W; P[i*6+1]=Math.random()*H; P[i*6+2]=0;P[i*6+3]=0; P[i*6+4]=i; P[i*6+5]=Math.random()*6.283; } }
+  function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=innerWidth;H=innerHeight; cv.width=W*DPR;cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); ctx.fillStyle='#0c0a07';ctx.fillRect(0,0,W,H); buildTargets(); if(!P) initP(); }
+  addEventListener('resize',resize); resize();
+  if(document.fonts&&document.fonts.ready){ document.fonts.ready.then(function(){ buildTargets(); }); }
+
+  function mix(a,b,k){ return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]; }
+
+  function frame(){
+    time+=0.016;
+    ctx.globalCompositeOperation='source-over'; ctx.fillStyle='rgba(12,10,7,0.14)'; ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    var tgt = mode===0?tTen : (mode===2?tSen:null);
+    for(var i=0;i<N;i++){
+      var ix=i*6, x=P[ix],y=P[ix+1],vx=P[ix+2],vy=P[ix+3],ti=P[ix+4],seed=P[ix+5];
+      var settled=0, col, sz;
+      if(tgt){
+        var T=tgt[ti % tgt.length]; var tx=T[0]+Math.sin(time*1.3+seed)*1.2, ty=T[1]+Math.cos(time*1.1+seed)*1.2;
+        vx+=(tx-x)*0.026; vy+=(ty-y)*0.026; vx*=0.84; vy*=0.84;
+        var dd=Math.abs(tx-x)+Math.abs(ty-y); settled=Math.max(0,1-dd/60);
+        if(mode===0){ col=mix(teal,tealB,0.3+settled*0.5); } else { col=mix([232,200,140],gold,0.2+settled*0.6); }
+        sz=1.2+settled*1.1;
+      }else{
+        // scatter: drift across whole screen (reveals scale)
+        vx+=Math.cos(y*0.010+time)*0.07+(Math.random()-0.5)*0.06;
+        vy+=Math.sin(x*0.010-time)*0.07+(Math.random()-0.5)*0.06;
+        vx*=0.95; vy*=0.95;
+        col=mix(teal,gold, (x/W)*0.5); sz=1.1;
+      }
+      x+=vx; y+=vy;
+      if(x<-6)x+=W+12; if(x>W+6)x-=W+12; if(y<-6)y+=H+12; if(y>H+6)y-=H+12;
+      P[ix]=x;P[ix+1]=y;P[ix+2]=vx;P[ix+3]=vy;
+      var alpha = tgt? (0.25+settled*0.55) : 0.34;
+      ctx.fillStyle='rgba('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+','+alpha.toFixed(3)+')';
+      ctx.fillRect(x-sz/2,y-sz/2,sz,sz);
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  var capB=document.getElementById('capB'),capS=document.getElementById('capS'),btn=document.getElementById('btn');
+  var stp=[document.getElementById('s0'),document.getElementById('s1'),document.getElementById('s2')];
+  var caps=[
+    {b:'<span class="t">点</span>。', s:'手元の、一点。ここは速くなった。', btn:'▶ 引いて、全体を見る'},
+    {b:'点は、<span class="t">無数</span>。', s:'引いて見れば、こんなにある。みんなバラバラ。', btn:'▶ 線に、つなぐ'},
+    {b:'<span class="g">線</span>。', s:'つなげば、一本になる。点が、線になる。', btn:'↺ もう一度'}
+  ];
+  function paint(i){ capB.innerHTML=caps[i].b;capS.innerHTML=caps[i].s;btn.innerHTML=caps[i].btn+'<span class="h">クリック / Space / →</span>';
+    stp.forEach(function(e,idx){e.classList.toggle('on',idx===i);e.classList.toggle('done',idx<i);}); }
+  function burst(){ for(var i=0;i<N;i++){ var a=Math.random()*6.283,s=2+Math.random()*5; P[i*6+2]=Math.cos(a)*s; P[i*6+3]=Math.sin(a)*s; } }
+  function go(){
+    if(mode===0){ mode=1; burst(); paint(1); }
+    else if(mode===1){ mode=2; paint(2); }
+    else { mode=0; paint(0); }
+  }
+  btn.addEventListener('click',go); cv.addEventListener('click',go);
+  document.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='ArrowRight'||e.key==='Enter'){ e.preventDefault(); go(); } });
+})();
+</script>
+</body>
+</html>

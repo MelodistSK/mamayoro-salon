@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小さな流れ → 大きな流れ ｜ パーティクル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#eab464; --gold-strong:#f3c479; --teal:#79c7bf; --teal-bright:#bdeffa;
+    --ink:#f5ede0; --ink-2:#cabfae; --ink-3:#8a7f6d;
+    --serif:"Shippori Mincho B1",serif; --sans:"Zen Kaku Gothic New",system-ui,sans-serif; --mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0c0a07}
+  body{font-family:var(--sans); color:var(--ink)}
+  #c{position:fixed; inset:0; display:block; width:100%; height:100%}
+  .vig{position:fixed; inset:0; pointer-events:none; z-index:2;
+    background:radial-gradient(125% 105% at 50% 50%, transparent 42%, rgba(8,6,4,.72) 100%)}
+  .grain{position:fixed; inset:0; pointer-events:none; z-index:3; opacity:.4; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+  .label{position:fixed; top:24px; left:28px; z-index:5; font-family:var(--mono); font-size:11px;
+    letter-spacing:.26em; color:var(--gold); text-transform:uppercase}
+  .counter{position:fixed; top:24px; right:28px; z-index:5; font-family:var(--mono); font-size:11px; letter-spacing:.18em; color:var(--ink-3)}
+  .counter b{color:var(--teal-bright); font-weight:700}
+  .cap{position:fixed; left:0; right:0; bottom:120px; text-align:center; z-index:5; pointer-events:none; padding:0 24px}
+  .cap .b{font-family:var(--serif); font-weight:800; font-size:clamp(26px,4.6vw,48px); letter-spacing:.03em;
+    text-shadow:0 4px 30px rgba(0,0,0,.82)}
+  .cap .b .g{color:var(--gold-strong)} .cap .b .t{color:var(--teal-bright)}
+  .cap .s{font-size:clamp(13px,1.8vw,16px); color:var(--ink-2); margin-top:13px; letter-spacing:.04em; text-shadow:0 2px 14px rgba(0,0,0,.9)}
+  .cap .s .em{color:var(--gold-strong); font-weight:700}
+  .ctrl{position:fixed; left:0; right:0; bottom:42px; display:flex; justify-content:center; z-index:6}
+  .btn{font-family:var(--sans); font-weight:700; font-size:16px; letter-spacing:.05em; color:#1a1408;
+    background:linear-gradient(180deg,var(--gold-strong),var(--gold)); border:none; cursor:pointer;
+    padding:14px 34px; border-radius:100px; box-shadow:0 10px 30px rgba(234,180,100,.3), 0 2px 0 rgba(255,255,255,.25) inset;
+    transition:transform .2s, box-shadow .25s}
+  .btn:hover{transform:translateY(-2px); box-shadow:0 16px 40px rgba(234,180,100,.42)}
+  .btn .h{display:block; font-family:var(--mono); font-weight:500; font-size:10px; letter-spacing:.16em; color:rgba(26,20,8,.6); margin-top:3px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="vig"></div><div class="grain"></div>
+<div class="label">小さな流れ → 大きな流れ</div>
+<div class="counter">PARTICLES <b id="pc">—</b></div>
+<div class="cap">
+  <div class="b" id="capB">小さな流れが、<span class="t">たくさん</span>。</div>
+  <div class="s" id="capS">ひとつひとつは速い。でも、バラバラ。&nbsp;＝&nbsp;<span class="em">点</span></div>
+</div>
+<div class="ctrl"><button class="btn" id="btn">▶ 一本の大きな流れにする<span class="h">クリック / Space で切替</span></button></div>
+<script>
+(function(){
+  var cv=document.getElementById('c'), ctx=cv.getContext('2d');
+  var W,H,DPR,N,P,bigHalf;
+  var L=6, laneBase=[],laneAmp=[],laneFreq=[],lanePhase=[];
+  var t=0, tT=0, time=0;
+  var teal=[121,199,191], tealB=[189,239,250], gold=[243,196,121];
+
+  function recalc(){
+    bigHalf=H*0.205;
+    for(var k=0;k<L;k++){
+      laneBase[k]=H*(0.15 + 0.70*k/(L-1));
+      laneAmp[k]=H*(0.020 + 0.016*(k%3));
+      laneFreq[k]=0.0036 + 0.0017*k;
+      lanePhase[k]=k*1.27;
+    }
+  }
+  function initParticles(){
+    N=Math.min(6400, Math.floor(W*H/210));
+    P=new Float32Array(N*5); // x,y,px,py,rank
+    for(var i=0;i<N;i++){
+      var lane=i%L;
+      P[i*5]=Math.random()*W;
+      P[i*5+1]=laneBase[lane]+(Math.random()-0.5)*H*0.05;
+      P[i*5+2]=P[i*5]; P[i*5+3]=P[i*5+1];
+      P[i*5+4]=(Math.random()*2-1);
+    }
+    document.getElementById('pc').textContent=N.toLocaleString();
+  }
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=window.innerWidth; H=window.innerHeight;
+    cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.fillStyle='#0c0a07'; ctx.fillRect(0,0,W,H);
+    recalc(); if(!P) initParticles();
+  }
+  window.addEventListener('resize',resize); resize();
+
+  function cyBig(x){ return H*0.5 + Math.sin(x*0.0050+0.5)*H*0.12 + Math.sin(x*0.0130+1.1)*H*0.04; }
+  function mix(a,b,k){ return [a[0]+(b[0]-a[0])*k, a[1]+(b[1]-a[1])*k, a[2]+(b[2]-a[2])*k]; }
+
+  function frame(){
+    time+=0.016;
+    t += (tT - t)*0.016;
+    var tt = t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+
+    ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle='rgba(12,10,7,0.085)';
+    ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+
+    for(var i=0;i<N;i++){
+      var ix=i*5, x=P[ix], y=P[ix+1], lane=i%L, rank=P[ix+4];
+
+      // small flow: hug one of many thin lanes
+      var sty = laneBase[lane] + laneAmp[lane]*Math.sin(x*laneFreq[lane]+lanePhase[lane]+time*0.25);
+      var svx=1.35, svy=(sty-y)*0.052;
+      // big flow: fill one wide, fast band around a single centerline
+      var bty = cyBig(x) + rank*bigHalf + Math.sin(x*0.020 + y*0.018 + time)*7;
+      var bvx=2.75, bvy=(bty-y)*0.046;
+
+      var vx=svx+(bvx-svx)*tt, vy=svy+(bvy-svy)*tt;
+
+      P[ix+2]=x; P[ix+3]=y;
+      x+=vx; y+=vy;
+      if(x>W+8){ x=-8; y=(tt<0.5? laneBase[lane] : cyBig(0)+rank*bigHalf) + (Math.random()-0.5)*20; P[ix+2]=x; P[ix+3]=y; }
+      if(y<-14||y>H+14){ y=Math.random()*H; P[ix+2]=x; P[ix+3]=y; }
+      P[ix]=x; P[ix+1]=y;
+
+      // color: cool teal (small) -> gold (big), brighter & thicker downstream
+      var prog=x/W;
+      var centerNear = 1 - Math.min(1, Math.abs(cyBig(x)-y)/(bigHalf*1.15));
+      var g = Math.min(1, tt*0.78 + prog*0.26 + tt*centerNear*0.25);
+      var col = mix(mix(teal,tealB,0.25+centerNear*0.25), gold, g);
+      var alpha = 0.22 + tt*0.34 + centerNear*tt*0.12 + 0.10;
+      ctx.lineWidth = 0.9 + tt*1.15;
+      ctx.strokeStyle='rgba('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+','+alpha.toFixed(3)+')';
+      ctx.beginPath(); ctx.moveTo(P[ix+2],P[ix+3]); ctx.lineTo(x,y); ctx.stroke();
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  var capB=document.getElementById('capB'), capS=document.getElementById('capS'), btn=document.getElementById('btn');
+  function setMode(big){
+    tT = big?1:0;
+    if(big){
+      capB.innerHTML='ひとつの、<span class="g">大きな流れ</span>へ。';
+      capS.innerHTML='全部がつながって、一本の太い流れになる。&nbsp;＝&nbsp;<span class="em">線</span>';
+      btn.innerHTML='↺ 小さな流れに戻す<span class="h">クリック / Space で切替</span>';
+    }else{
+      capB.innerHTML='小さな流れが、<span class="t">たくさん</span>。';
+      capS.innerHTML='ひとつひとつは速い。でも、バラバラ。&nbsp;＝&nbsp;<span class="em">点</span>';
+      btn.innerHTML='▶ 一本の大きな流れにする<span class="h">クリック / Space で切替</span>';
+    }
+  }
+  btn.addEventListener('click',function(){ setMode(tT<0.5); });
+  document.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='ArrowRight'){ e.preventDefault(); setMode(tT<0.5); } });
+  setTimeout(function(){ setMode(true); },3600);
+  setInterval(function(){ setMode(tT<0.5); },9500);
+})();
+</script>
+</body>
+</html>

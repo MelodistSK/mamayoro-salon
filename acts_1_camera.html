@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三幕 案1 ｜ カメラズーム型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#eab464;--gold-strong:#f3c479;--teal:#79c7bf;--teal-bright:#bdeffa;--coral:#e2906f;
+    --ink:#f5ede0;--ink-2:#cabfae;--ink-3:#8a7f6d;
+    --serif:"Shippori Mincho B1",serif;--sans:"Zen Kaku Gothic New",system-ui,sans-serif;--mono:"JetBrains Mono",monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#0c0a07}
+  body{font-family:var(--sans);color:var(--ink)}
+  #c{position:fixed;inset:0;display:block;width:100%;height:100%}
+  .vig{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(125% 105% at 50% 50%,transparent 42%,rgba(8,6,4,.72) 100%)}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:.4;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+  .label{position:fixed;top:24px;left:28px;z-index:5;font-family:var(--mono);font-size:11px;letter-spacing:.26em;color:var(--gold);text-transform:uppercase}
+  .cap{position:fixed;left:0;right:0;bottom:120px;text-align:center;z-index:5;pointer-events:none;padding:0 24px}
+  .cap .b{font-family:var(--serif);font-weight:800;font-size:clamp(25px,4.4vw,46px);letter-spacing:.03em;text-shadow:0 4px 30px rgba(0,0,0,.82)}
+  .cap .b .g{color:var(--gold-strong)}.cap .b .t{color:var(--teal-bright)}
+  .cap .s{font-size:clamp(13px,1.7vw,15.5px);color:var(--ink-2);margin-top:12px;letter-spacing:.04em;text-shadow:0 2px 14px rgba(0,0,0,.9)}
+  .cap .s .em{color:var(--gold-strong);font-weight:700}
+  .ctrl{position:fixed;left:0;right:0;bottom:40px;display:flex;flex-direction:column;align-items:center;gap:15px;z-index:6}
+  .steps{display:flex;gap:8px}
+  .stp{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--ink-3);border:1px solid rgba(245,237,224,.1);
+    border-radius:100px;padding:5px 13px;background:rgba(20,17,13,.5);backdrop-filter:blur(4px);transition:.4s}
+  .stp.on{color:#1a1408;background:var(--gold);border-color:var(--gold);font-weight:700}
+  .stp.done{color:var(--gold)}
+  .btn{font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.05em;color:#1a1408;
+    background:linear-gradient(180deg,var(--gold-strong),var(--gold));border:none;cursor:pointer;padding:14px 32px;border-radius:100px;
+    box-shadow:0 10px 30px rgba(234,180,100,.3),0 2px 0 rgba(255,255,255,.25) inset;transition:transform .2s,box-shadow .25s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(234,180,100,.42)}
+  .btn:disabled{opacity:.5}
+  .btn .h{display:block;font-family:var(--mono);font-weight:500;font-size:10px;letter-spacing:.16em;color:rgba(26,20,8,.6);margin-top:3px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="vig"></div><div class="grain"></div>
+<div class="label">三幕 案1 ｜ カメラズーム型</div>
+<div class="cap"><div class="b" id="capB">ひとつの流れを、直す。</div><div class="s" id="capS">詰まりを取れば、ここは流れる。&nbsp;＝&nbsp;<span class="em">点</span></div></div>
+<div class="ctrl">
+  <div class="steps"><span class="stp on" id="s0">寄り</span><span class="stp" id="s1">引き</span><span class="stp" id="s2">再構築</span></div>
+  <button class="btn" id="btn">▶ 引いて、全体を見る<span class="h">クリック / Space / →</span></button>
+</div>
+<script>
+(function(){
+  var cv=document.getElementById('c'), ctx=cv.getContext('2d');
+  var W,H,DPR;
+  var WW=4000, WH=2250, L=7;
+  var laneBase=[],laneAmp=[],laneFreq=[],lanePhase=[];
+  for(var k=0;k<L;k++){ laneBase[k]=WH*(0.12+0.76*k/(L-1)); laneAmp[k]=WH*(0.018+0.012*(k%3)); laneFreq[k]=0.0016+0.0007*k; lanePhase[k]=k*1.27; }
+  var F=3, clogX=WW*0.5;
+  var focus={x:clogX, y:laneBase[F]};
+  var gaps=[ {x:WW*0.30,y:WH*0.30,t:'引き継ぎ'},{x:WW*0.62,y:WH*0.70,t:'確認待ち'},{x:WW*0.78,y:WH*0.40,t:'手戻り'},{x:WW*0.44,y:WH*0.80,t:'二重入力'} ];
+
+  var N, P, time=0, m=0, mT=0, cleared=0, clearedT=0, act=0, animating=false;
+  var cam={s:3.4, cx:focus.x, cy:focus.y};
+  var teal=[121,199,191],tealB=[189,239,250],gold=[243,196,121],coral=[226,144,111];
+
+  function fitScale(){ return Math.min(W/WW, H/WH)*0.94; }
+  function initP(){ N=Math.min(5600,Math.floor(W*H/240)); P=new Float32Array(N*5);
+    for(var i=0;i<N;i++){var ln=i%L; P[i*5]=Math.random()*WW; P[i*5+1]=laneBase[ln]+(Math.random()-0.5)*WH*0.04; P[i*5+2]=P[i*5]; P[i*5+3]=P[i*5+1]; P[i*5+4]=Math.random()*2-1;} }
+  function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); ctx.fillStyle='#0c0a07'; ctx.fillRect(0,0,W,H); if(!P) initP(); }
+  addEventListener('resize',resize); resize();
+
+  function cyBig(x){ return WH/2 + Math.sin(x*0.0018+0.5)*WH*0.12 + Math.sin(x*0.0042)*WH*0.04; }
+  function mix(a,b,k){ return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]; }
+  function sx(x){ return (x-cam.cx)*cam.s + W/2; }
+  function sy(y){ return (y-cam.cy)*cam.s + H/2; }
+
+  function tweenCam(to,dur,cb){ var f={s:cam.s,cx:cam.cx,cy:cam.cy},t0=null;
+    function fr(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1); var e=p<0.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+      cam.s=f.s+(to.s-f.s)*e; cam.cx=f.cx+(to.cx-f.cx)*e; cam.cy=f.cy+(to.cy-f.cy)*e;
+      if(p<1) requestAnimationFrame(fr); else if(cb) cb(); }
+    requestAnimationFrame(fr); }
+
+  function frame(){
+    time+=0.016;
+    m+=(mT-m)*0.02; cleared+=(clearedT-cleared)*0.04;
+    var mm=m<0.5?4*m*m*m:1-Math.pow(-2*m+2,3)/2;
+
+    ctx.globalCompositeOperation='source-over'; ctx.fillStyle='rgba(12,10,7,0.10)'; ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+
+    for(var i=0;i<N;i++){
+      var ix=i*5, x=P[ix], y=P[ix+1], ln=i%L, rank=P[ix+4];
+      var sty=laneBase[ln]+laneAmp[ln]*Math.sin(x*laneFreq[ln]+lanePhase[ln]+time*0.25);
+      var svx=7.0, svy=(sty-y)*0.05;
+      var bty=cyBig(x)+rank*WH*0.2+Math.sin(x*0.006+y*0.006+time)*16;
+      var bvx=12.5, bvy=(bty-y)*0.046;
+      var vx=svx+(bvx-svx)*mm, vy=svy+(bvy-svy)*mm;
+      // clog at focus lane (only while not cleared, only that lane)
+      var slow=1, congested=0;
+      if(cleared<0.85 && ln===F && x>clogX-150 && x<clogX+30){ slow=0.12+cleared*0.8; congested=1-cleared; vy+=(focus.y-y)*0.0+ (Math.random()-0.5)*6*congested; }
+      x+=vx*slow; y+=vy;
+      if(x>WW+10){ x=-10; y=(mm<0.5?laneBase[ln]:cyBig(0)+rank*WH*0.2)+(Math.random()-0.5)*40; P[ix+2]=x;P[ix+3]=y; }
+      if(y<-20||y>WH+20){ y=Math.random()*WH; P[ix+2]=x;P[ix+3]=y; }
+      P[ix+2]=P[ix]; P[ix+3]=P[ix+1]; P[ix]=x; P[ix+1]=y;
+
+      var X=sx(x),Y=y? sy(y):sy(y);
+      if(X<-30||X>W+30||Y<-30||Y>H+30) continue;
+      var pX=sx(P[ix+2]),pY=sy(P[ix+3]);
+      var prog=x/WW, cn=1-Math.min(1,Math.abs(cyBig(x)-y)/(WH*0.23));
+      var g=Math.min(1, mm*0.78+prog*0.24+mm*cn*0.22);
+      var col=mix(mix(teal,tealB,0.25+cn*0.25),gold,g);
+      if(congested>0.4){ col=mix(col,coral,congested*0.6); }
+      var alpha=0.22+mm*0.32+cn*mm*0.12+0.10;
+      ctx.lineWidth=(0.8+mm*1.0)*Math.min(2.2,Math.max(0.5,cam.s*0.5));
+      ctx.strokeStyle='rgba('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+','+alpha.toFixed(3)+')';
+      ctx.beginPath(); ctx.moveTo(pX,pY); ctx.lineTo(X,Y); ctx.stroke();
+    }
+
+    // overlays in 引き
+    if(act===1){
+      var fx=sx(focus.x), fy=sy(focus.y);
+      var r=18+Math.sin(time*2.4)*9;
+      ctx.globalCompositeOperation='source-over';
+      ctx.strokeStyle='rgba(189,239,250,0.85)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(fx,fy,r,0,7); ctx.stroke();
+      ctx.fillStyle='rgba(189,239,250,0.9)'; ctx.font='13px "JetBrains Mono",monospace'; ctx.textAlign='left';
+      ctx.fillText('さっき直したのは、ここ一カ所', fx+24, fy-16);
+      ctx.fillStyle='rgba(226,144,111,0.92)'; ctx.font='700 15px "JetBrains Mono",monospace';
+      for(var gi=0;gi<gaps.length;gi++){ var gX=sx(gaps[gi].x),gY=sy(gaps[gi].y);
+        if(gX<0||gX>W) continue; ctx.fillText(gaps[gi].t, gX, gY); }
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  // act control
+  var capB=document.getElementById('capB'),capS=document.getElementById('capS'),btn=document.getElementById('btn');
+  var stp=[document.getElementById('s0'),document.getElementById('s1'),document.getElementById('s2')];
+  var caps=[
+    {b:'ひとつの流れを、直す。', s:'詰まりを取れば、ここは流れる。&nbsp;＝&nbsp;<span class="em">点</span>', btn:'▶ 引いて、全体を見る'},
+    {b:'——直したのは、ほんの<span class="t">一カ所</span>。', s:'引いて見ると、ムダは「あいだ」に溜まっている。', btn:'▶ 川ごと、線にする'},
+    {b:'川ごと、<span class="g">整える</span>。', s:'点が、線になる。&nbsp;＝&nbsp;<span class="em">線</span>', btn:'↺ もう一度'}
+  ];
+  function paint(i){ capB.innerHTML=caps[i].b; capS.innerHTML=caps[i].s; btn.innerHTML=caps[i].btn+'<span class="h">クリック / Space / →</span>';
+    stp.forEach(function(e,idx){ e.classList.toggle('on',idx===i); e.classList.toggle('done',idx<i); }); }
+  // initial: zoomed; auto-clear the clog after a moment
+  clearedT=0; setTimeout(function(){ clearedT=1; },1800);
+
+  function go(){ if(animating) return;
+    if(act===0){ act=1; animating=true; btn.disabled=true; clearedT=1;
+      tweenCam({s:fitScale(),cx:WW/2,cy:WH/2}, 2600, function(){ paint(1); animating=false; btn.disabled=false; });
+      return; }
+    if(act===1){ act=2; animating=true; btn.disabled=true; mT=1; paint(2);
+      setTimeout(function(){ animating=false; btn.disabled=false; },1400); return; }
+    if(act===2){ act=0; mT=0; clearedT=0; paint(0);
+      tweenCam({s:3.4,cx:focus.x,cy:focus.y},1500); setTimeout(function(){ clearedT=1; },1700); }
+  }
+  btn.addEventListener('click',go);
+  document.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='ArrowRight'||e.key==='Enter'){ e.preventDefault(); go(); } });
+  cv.addEventListener('click',go);
+})();
+</script>
+</body>
+</html>
