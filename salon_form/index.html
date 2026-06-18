@@ -68,7 +68,7 @@
   <div id="card">
     <div class="kick">ままよろサロン</div>
     <h1>お申し込み</h1>
-    <p class="lead">あなたの会社の<span class="g">“効く一カ所”</span>を、一緒に見つけます。今すぐの相談でも、まずは情報だけでも。</p>
+    <p class="lead">あなたの会社の<span class="g">“効く一カ所”</span>を、無料相談で一緒に見つけます。オンライン相談も可能です。</p>
 
     <form id="form" novalidate>
       <!-- 将来プラットフォーム用メタ（開催回） -->
@@ -78,34 +78,26 @@
       <input type="hidden" name="kind"     id="kind" value="無料相談">
       <input type="hidden" name="source"   value="登壇QR">
 
-      <!-- ① 希望の切替（ホット / ソフト） -->
-      <div class="f"><label class="fl">ご希望<span class="req">必須</span></label>
-        <div class="seg">
-          <label class="seg-o"><input type="radio" name="mode" value="hot" checked><span class="st">無料相談を申し込む</span><span class="ss">“効く一カ所”を一緒に見つける（無料・オンライン可）</span></label>
-          <label class="seg-o"><input type="radio" name="mode" value="soft"><span class="st">案内・資料だけ受け取る</span><span class="ss">いまは情報だけ、という方へ（メールのみでOK）</span></label>
-        </div>
-      </div>
-
       <!-- 共通 -->
       <div class="f"><label class="fl">お名前<span class="req">必須</span></label>
         <input type="text" name="name" autocomplete="name" required></div>
 
-      <div class="f"><label class="fl">会社名・屋号<span class="req" id="companyReq">必須</span><span class="opt" id="companyOpt" style="display:none">任意</span></label>
+      <div class="f"><label class="fl">会社名・屋号<span class="req">必須</span></label>
         <input type="text" name="company" id="company" autocomplete="organization" required></div>
 
       <div class="f"><label class="fl">メールアドレス<span class="req">必須</span></label>
         <input type="email" name="email" autocomplete="email" inputmode="email" required></div>
 
-      <!-- ② 無料相談のときだけ表示 -->
+      <!-- 詳細項目 -->
       <div id="hotBlock" style="display:flex;flex-direction:column;gap:18px">
         <div class="f"><label class="fl">電話番号<span class="opt">任意</span></label>
           <input type="tel" name="phone" autocomplete="tel" inputmode="tel"></div>
 
         <div class="f"><label class="fl">興味の方向<span class="req">必須</span></label>
           <div class="choices">
-            <label class="choice"><input type="radio" name="direction" value="構築を任せたい"><span class="dot"></span><span><span class="ct">仕組み化を任せたい</span><span class="cs">プロに構築をお願いしたい（線）</span></span></label>
-            <label class="choice"><input type="radio" name="direction" value="自分たちで学びたい"><span class="dot"></span><span><span class="ct">自分たちで学びたい</span><span class="cs">社内でできるようになりたい</span></span></label>
-            <label class="choice"><input type="radio" name="direction" value="現状を聞いてほしい"><span class="dot"></span><span><span class="ct">現状を聞いてほしい</span><span class="cs">どこから手をつけるか、一緒に考えたい</span></span></label>
+            <label class="choice"><input type="radio" name="direction" value="構築を任せたい" required><span class="dot"></span><span><span class="ct">仕組み化を任せたい</span><span class="cs">プロに構築をお願いしたい（線）</span></span></label>
+            <label class="choice"><input type="radio" name="direction" value="自分たちで学びたい" required><span class="dot"></span><span><span class="ct">自分たちで学びたい</span><span class="cs">社内でできるようになりたい</span></span></label>
+            <label class="choice"><input type="radio" name="direction" value="現状を聞いてほしい" required><span class="dot"></span><span><span class="ct">現状を聞いてほしい</span><span class="cs">どこから手をつけるか、一緒に考えたい</span></span></label>
           </div>
         </div>
 
@@ -153,30 +145,9 @@
   // ▼▼ Apps Script の「ウェブアプリ」URL をここに貼る（READMEの手順参照）▼▼
   var ENDPOINT = "https://script.google.com/macros/s/AKfycbyiE9rXzcGHQ8daHN2aFLJ2y1A_JGw-WSjOS9JSSgSfTXFEsNGEWGJr0K8M3VQdvqHBYg/exec";
   var form=document.getElementById('form'), btn=document.getElementById('btn'), err=document.getElementById('err'),
-      card=document.getElementById('card'), thanks=document.getElementById('thanks'),
-      hotBlock=document.getElementById('hotBlock'), kind=document.getElementById('kind'),
-      company=document.getElementById('company'), companyReq=document.getElementById('companyReq'), companyOpt=document.getElementById('companyOpt'),
-      thanksTitle=document.getElementById('thanksTitle'), thanksMsg=document.getElementById('thanksMsg'),
-      dirRadios=form.querySelectorAll('input[name="direction"]'),
-      modeRadios=form.querySelectorAll('input[name="mode"]');
-
-  function applyMode(){
-    var soft = form.querySelector('input[name="mode"]:checked').value === 'soft';
-    hotBlock.style.display = soft ? 'none' : 'flex';
-    company.required = !soft;                                  // ソフトは会社名 任意
-    companyReq.style.display = soft ? 'none' : 'inline';
-    companyOpt.style.display = soft ? 'inline' : 'none';
-    dirRadios.forEach(function(r){ r.required = !soft; });     // 興味の方向はホットのみ必須
-    kind.value = soft ? '案内・資料希望' : '無料相談';
-    btn.textContent = soft ? '案内を受け取る' : '無料相談を申し込む';
-  }
-  modeRadios.forEach(function(r){ r.addEventListener('change', applyMode); });
-  applyMode();
+      card=document.getElementById('card'), thanks=document.getElementById('thanks');
 
   function showThanks(){
-    var soft = kind.value === '案内・資料希望';
-    thanksTitle.textContent = soft ? 'ありがとうございます。' : 'お申し込み、ありがとうございます。';
-    thanksMsg.textContent  = soft ? '次回の案内・資料を、ご記入のメール宛にお送りします。' : '2営業日以内に、ご記入のメールアドレス宛にご連絡します。';
     card.style.display='none'; thanks.style.display='block'; window.scrollTo({top:0,behavior:'smooth'});
   }
 
